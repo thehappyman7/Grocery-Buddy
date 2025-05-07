@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -21,6 +22,7 @@ interface GroceryContextType {
   clearAllSelections: () => void;
   addItem: (name: string, category: string) => void;
   allItemsSelected: boolean;
+  removeItemsByCategory: (category: string) => void;
 }
 
 const GroceryContext = createContext<GroceryContextType | undefined>(undefined);
@@ -80,6 +82,26 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success(`${name} added to your grocery list!`);
   };
 
+  const removeItemsByCategory = (category: string) => {
+    const previousCount = groceryItems.filter(item => item.category.toLowerCase() === category.toLowerCase()).length;
+    
+    if (previousCount === 0) {
+      toast.info(`No items found with category "${category}"`);
+      return;
+    }
+    
+    setGroceryItems(prevItems => 
+      prevItems.filter(item => item.category.toLowerCase() !== category.toLowerCase())
+    );
+    
+    toast.success(`Removed ${previousCount} item(s) with category "${category}"`);
+  };
+
+  // Call the function to remove "Foods" category items when component mounts
+  useEffect(() => {
+    removeItemsByCategory("Foods");
+  }, []);
+
   const selectedItemsCount = groceryItems.filter(item => item.selected).length;
   const allItemsSelected = groceryItems.length > 0 && selectedItemsCount === groceryItems.length;
 
@@ -92,7 +114,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
         selectedItemsCount,
         clearAllSelections,
         addItem,
-        allItemsSelected
+        allItemsSelected,
+        removeItemsByCategory
       }}
     >
       {children}
