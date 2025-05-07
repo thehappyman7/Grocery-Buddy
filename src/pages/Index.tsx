@@ -3,7 +3,6 @@ import React from 'react';
 import { GroceryProvider } from '@/context/GroceryContext';
 import Header from '@/components/Header';
 import GroceryList from '@/components/GroceryList';
-import AddGroceryForm from '@/components/AddGroceryForm';
 
 const Index = () => {
   return (
@@ -23,7 +22,6 @@ const Index = () => {
             `}
           </style>
           <Header />
-          <AddGroceryForm />
           <GroceryList />
         </div>
       </div>

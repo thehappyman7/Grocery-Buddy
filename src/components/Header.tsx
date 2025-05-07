@@ -2,24 +2,9 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useGrocery } from '@/context/GroceryContext';
-import { PlusCircle } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { selectedItemsCount, clearAllSelections, allItemsSelected } = useGrocery();
-  
-  // Function to scroll to the Add Item form
-  const scrollToAddForm = () => {
-    const formElement = document.getElementById('add-grocery-form');
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: 'smooth' });
-      // Add a highlight effect to the form
-      formElement.classList.add('highlight-form');
-      // Remove highlight after animation
-      setTimeout(() => {
-        formElement.classList.remove('highlight-form');
-      }, 2000);
-    }
-  };
   
   return (
     <header className="mb-8">
@@ -30,16 +15,6 @@ const Header: React.FC = () => {
             <span className="bg-grocery-purple text-white px-3 py-1 rounded-full text-sm font-medium">
               {selectedItemsCount} selected
             </span>
-          )}
-          {allItemsSelected && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={scrollToAddForm}
-              className="border-green-500 text-green-600 hover:bg-green-50 flex items-center gap-1"
-            >
-              <PlusCircle className="h-4 w-4" /> Add Another Item
-            </Button>
           )}
           <Button 
             variant="outline" 
