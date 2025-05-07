@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -34,7 +33,18 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     const savedItems = localStorage.getItem('groceryItems');
     // If there are items saved in localStorage, parse and return them
     if (savedItems) {
-      return JSON.parse(savedItems);
+      try {
+        const parsedItems = JSON.parse(savedItems);
+        // Filter out "Foods" and "Pooja items" categories immediately
+        return parsedItems.filter(
+          (item: GroceryItem) => 
+            item.category.toLowerCase() !== "foods".toLowerCase() && 
+            item.category.toLowerCase() !== "pooja items".toLowerCase()
+        );
+      } catch (error) {
+        console.error("Error parsing grocery items from localStorage:", error);
+        return initialGroceryItems;
+      }
     }
     // Otherwise return the initial empty array
     return initialGroceryItems;
@@ -69,6 +79,13 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const addItem = (name: string, category: string) => {
+    // Don't allow adding items with "Foods" or "Pooja items" categories
+    if (category.toLowerCase() === "foods".toLowerCase() || 
+        category.toLowerCase() === "pooja items".toLowerCase()) {
+      toast.error(`Cannot add items to the "${category}" category as it has been removed.`);
+      return;
+    }
+    
     const newId = groceryItems.length > 0 ? Math.max(...groceryItems.map(item => item.id)) + 1 : 1;
     const newItem = {
       id: newId,
@@ -97,9 +114,9 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success(`Removed ${previousCount} item(s) with category "${category}"`);
   };
 
-  // Call the function to remove "Foods" category items when component mounts
-  // Also remove "Pooja items" category
+  // Call the function to remove categories when component mounts
   useEffect(() => {
+    // This will ensure any potential items with these categories are removed on mount
     removeItemsByCategory("Foods");
     removeItemsByCategory("Pooja items");
   }, []);
