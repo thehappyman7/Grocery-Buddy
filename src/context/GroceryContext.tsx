@@ -11,19 +11,8 @@ export interface GroceryItem {
   quantity: string;
 }
 
-// Sample grocery items (to be replaced later)
-const sampleGroceryItems: GroceryItem[] = [
-  { id: 1, name: 'Milk', category: 'Dairy', selected: false, quantity: '' },
-  { id: 2, name: 'Eggs', category: 'Dairy', selected: false, quantity: '' },
-  { id: 3, name: 'Bread', category: 'Bakery', selected: false, quantity: '' },
-  { id: 4, name: 'Apples', category: 'Fruits', selected: false, quantity: '' },
-  { id: 5, name: 'Bananas', category: 'Fruits', selected: false, quantity: '' },
-  { id: 6, name: 'Chicken', category: 'Meat', selected: false, quantity: '' },
-  { id: 7, name: 'Rice', category: 'Grains', selected: false, quantity: '' },
-  { id: 8, name: 'Pasta', category: 'Grains', selected: false, quantity: '' },
-  { id: 9, name: 'Tomatoes', category: 'Vegetables', selected: false, quantity: '' },
-  { id: 10, name: 'Onions', category: 'Vegetables', selected: false, quantity: '' },
-];
+// Initial empty grocery items array
+const initialGroceryItems: GroceryItem[] = [];
 
 interface GroceryContextType {
   groceryItems: GroceryItem[];
@@ -31,12 +20,13 @@ interface GroceryContextType {
   updateQuantity: (id: number, quantity: string) => void;
   selectedItemsCount: number;
   clearAllSelections: () => void;
+  addItem: (name: string, category: string) => void;
 }
 
 const GroceryContext = createContext<GroceryContextType | undefined>(undefined);
 
 export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(sampleGroceryItems);
+  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(initialGroceryItems);
 
   const toggleItemSelection = (id: number) => {
     setGroceryItems(prevItems =>
@@ -61,6 +51,20 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success('All selections cleared!');
   };
 
+  const addItem = (name: string, category: string) => {
+    const newId = groceryItems.length > 0 ? Math.max(...groceryItems.map(item => item.id)) + 1 : 1;
+    const newItem = {
+      id: newId,
+      name,
+      category,
+      selected: false,
+      quantity: ''
+    };
+    
+    setGroceryItems(prevItems => [...prevItems, newItem]);
+    toast.success(`${name} added to your grocery list!`);
+  };
+
   const selectedItemsCount = groceryItems.filter(item => item.selected).length;
 
   return (
@@ -70,7 +74,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
         toggleItemSelection,
         updateQuantity,
         selectedItemsCount,
-        clearAllSelections
+        clearAllSelections,
+        addItem
       }}
     >
       {children}
