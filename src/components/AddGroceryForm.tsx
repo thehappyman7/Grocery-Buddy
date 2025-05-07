@@ -32,7 +32,7 @@ const AddGroceryForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-grocery-purple-light p-6 rounded-lg mb-8 shadow-sm">
+    <div id="add-grocery-form" className="bg-grocery-purple-light p-6 rounded-lg mb-8 shadow-sm transition-all duration-300">
       <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
         <ListPlus className="h-5 w-5" /> Add New Item
       </h2>

@@ -21,6 +21,7 @@ interface GroceryContextType {
   selectedItemsCount: number;
   clearAllSelections: () => void;
   addItem: (name: string, category: string) => void;
+  allItemsSelected: boolean;
 }
 
 const GroceryContext = createContext<GroceryContextType | undefined>(undefined);
@@ -66,6 +67,7 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const selectedItemsCount = groceryItems.filter(item => item.selected).length;
+  const allItemsSelected = groceryItems.length > 0 && selectedItemsCount === groceryItems.length;
 
   return (
     <GroceryContext.Provider
@@ -75,7 +77,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
         updateQuantity,
         selectedItemsCount,
         clearAllSelections,
-        addItem
+        addItem,
+        allItemsSelected
       }}
     >
       {children}
