@@ -98,8 +98,10 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Call the function to remove "Foods" category items when component mounts
+  // Also remove "Pooja items" category
   useEffect(() => {
     removeItemsByCategory("Foods");
+    removeItemsByCategory("Pooja items");
   }, []);
 
   const selectedItemsCount = groceryItems.filter(item => item.selected).length;
