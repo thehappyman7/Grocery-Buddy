@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 
 // Define the grocery item type
@@ -27,7 +26,22 @@ interface GroceryContextType {
 const GroceryContext = createContext<GroceryContextType | undefined>(undefined);
 
 export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(initialGroceryItems);
+  // Load items from localStorage on initial render
+  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(() => {
+    // Try to get the items from localStorage
+    const savedItems = localStorage.getItem('groceryItems');
+    // If there are items saved in localStorage, parse and return them
+    if (savedItems) {
+      return JSON.parse(savedItems);
+    }
+    // Otherwise return the initial empty array
+    return initialGroceryItems;
+  });
+
+  // Save items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+  }, [groceryItems]);
 
   const toggleItemSelection = (id: number) => {
     setGroceryItems(prevItems =>
