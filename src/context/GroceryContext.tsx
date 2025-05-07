@@ -35,10 +35,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (savedItems) {
       try {
         const parsedItems = JSON.parse(savedItems);
-        // Filter out only "Foods" category immediately, not "Pooja items"
-        return parsedItems.filter(
-          (item: GroceryItem) => item.category.toLowerCase() !== "foods".toLowerCase()
-        );
+        // No longer filtering out any categories
+        return parsedItems;
       } catch (error) {
         console.error("Error parsing grocery items from localStorage:", error);
         return initialGroceryItems;
@@ -77,12 +75,7 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const addItem = (name: string, category: string) => {
-    // Don't allow adding items with "Foods" category only, allow "Pooja items"
-    if (category.toLowerCase() === "foods".toLowerCase()) {
-      toast.error(`Cannot add items to the "${category}" category as it has been removed.`);
-      return;
-    }
-    
+    // Allow adding items from any category
     const newId = groceryItems.length > 0 ? Math.max(...groceryItems.map(item => item.id)) + 1 : 1;
     const newItem = {
       id: newId,
@@ -110,12 +103,6 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     
     toast.success(`Removed ${previousCount} item(s) with category "${category}"`);
   };
-
-  // Call the function to remove only "Foods" category when component mounts
-  useEffect(() => {
-    // Only remove "Foods" category, not "Pooja items"
-    removeItemsByCategory("Foods");
-  }, []);
 
   const selectedItemsCount = groceryItems.filter(item => item.selected).length;
   const allItemsSelected = groceryItems.length > 0 && selectedItemsCount === groceryItems.length;
