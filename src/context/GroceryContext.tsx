@@ -35,11 +35,9 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (savedItems) {
       try {
         const parsedItems = JSON.parse(savedItems);
-        // Filter out "Foods" and "Pooja items" categories immediately
+        // Filter out only "Foods" category immediately, not "Pooja items"
         return parsedItems.filter(
-          (item: GroceryItem) => 
-            item.category.toLowerCase() !== "foods".toLowerCase() && 
-            item.category.toLowerCase() !== "pooja items".toLowerCase()
+          (item: GroceryItem) => item.category.toLowerCase() !== "foods".toLowerCase()
         );
       } catch (error) {
         console.error("Error parsing grocery items from localStorage:", error);
@@ -79,9 +77,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const addItem = (name: string, category: string) => {
-    // Don't allow adding items with "Foods" or "Pooja items" categories
-    if (category.toLowerCase() === "foods".toLowerCase() || 
-        category.toLowerCase() === "pooja items".toLowerCase()) {
+    // Don't allow adding items with "Foods" category only, allow "Pooja items"
+    if (category.toLowerCase() === "foods".toLowerCase()) {
       toast.error(`Cannot add items to the "${category}" category as it has been removed.`);
       return;
     }
@@ -114,11 +111,10 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success(`Removed ${previousCount} item(s) with category "${category}"`);
   };
 
-  // Call the function to remove categories when component mounts
+  // Call the function to remove only "Foods" category when component mounts
   useEffect(() => {
-    // This will ensure any potential items with these categories are removed on mount
+    // Only remove "Foods" category, not "Pooja items"
     removeItemsByCategory("Foods");
-    removeItemsByCategory("Pooja items");
   }, []);
 
   const selectedItemsCount = groceryItems.filter(item => item.selected).length;
