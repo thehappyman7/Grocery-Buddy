@@ -112,10 +112,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log('Sign out before Google login failed:', err);
       }
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Use the exact origin for redirect
+      const redirectUrl = window.location.origin;
+      console.log("Using redirect URL:", redirectUrl);
+
+      const { error, data } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectUrl,
+          queryParams: {
+            prompt: 'select_account' // Force account selection prompt
+          }
         }
       });
       
@@ -123,6 +130,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error('Google auth error details:', error);
         throw error;
       }
+      
+      console.log("Google Auth Response:", data);
     } catch (error: any) {
       console.error('Error logging in with Google:', error);
       toast.error(error?.message || 'Failed to log in with Google. Please try again.');
