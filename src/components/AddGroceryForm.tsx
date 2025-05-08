@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ListPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AddGroceryForm: React.FC = () => {
   const { addItem } = useGrocery();
@@ -29,6 +30,7 @@ const AddGroceryForm: React.FC = () => {
     setName('');
     setCategory('');
     setError('');
+    toast.success(`${name} added to your grocery list!`);
   };
 
   return (

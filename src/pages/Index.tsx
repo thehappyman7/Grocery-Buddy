@@ -1,12 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GroceryProvider } from '@/context/GroceryContext';
 import Header from '@/components/Header';
 import GroceryList from '@/components/GroceryList';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import AddGroceryForm from '@/components/AddGroceryForm';
+import { Button } from '@/components/ui/button';
+import { Plus, X } from 'lucide-react';
 
 const Index = () => {
+  const [showAddForm, setShowAddForm] = useState(true);
+
+  const toggleAddForm = () => {
+    setShowAddForm(!showAddForm);
+  };
+
   return (
     <GroceryProvider>
       <div className="min-h-screen flex flex-col bg-gray-50">
@@ -26,6 +35,27 @@ const Index = () => {
               `}
             </style>
             <Header />
+            
+            <div className="mb-6 flex justify-end">
+              <Button
+                onClick={toggleAddForm}
+                variant="outline"
+                size="sm"
+                className="border-grocery-purple text-grocery-purple hover:bg-grocery-purple-light flex items-center gap-2"
+              >
+                {showAddForm ? (
+                  <>
+                    <X className="h-4 w-4" /> Hide Add Item
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" /> Show Add Item
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {showAddForm && <AddGroceryForm />}
             <GroceryList />
           </div>
         </main>
