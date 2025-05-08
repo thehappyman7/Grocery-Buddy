@@ -1,6 +1,12 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+
+// Create a Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface User {
   id: string;
@@ -12,68 +18,115 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string) => void;
-  logout: () => void;
-  loginWithGoogle: () => void;
+  login: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Load user data from localStorage on initial render
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('groceryAppUser');
-    if (savedUser) {
-      try {
-        return JSON.parse(savedUser);
-      } catch (error) {
-        console.error("Error parsing user data from localStorage:", error);
-        return null;
-      }
-    }
-    return null;
-  });
-
+  const [user, setUser] = useState<User | null>(null);
   const isAuthenticated = user !== null;
 
-  // Save user data to localStorage whenever it changes
+  // Check for active session on load
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('groceryAppUser', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('groceryAppUser');
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error fetching session:', error);
+        return;
+      }
+      
+      if (data?.session) {
+        const userData = data.session.user;
+        setUser({
+          id: userData.id,
+          name: userData.user_metadata?.full_name || userData.email?.split('@')[0] || 'User',
+          email: userData.email || '',
+          avatar: userData.user_metadata?.avatar_url || 
+                 `https://ui-avatars.com/api/?name=${userData.email?.split('@')[0]}&background=9b87f5&color=fff`
+        });
+      }
+    };
+    
+    checkSession();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const userData = session.user;
+        setUser({
+          id: userData.id,
+          name: userData.user_metadata?.full_name || userData.email?.split('@')[0] || 'User',
+          email: userData.email || '',
+          avatar: userData.user_metadata?.avatar_url || 
+                 `https://ui-avatars.com/api/?name=${userData.email?.split('@')[0]}&background=9b87f5&color=fff`
+        });
+        toast.success('Successfully logged in!');
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        toast.info('You have been logged out');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Check your email for the login link!');
+    } catch (error) {
+      console.error('Error logging in:', error);
+      toast.error('Failed to log in. Please try again.');
     }
-  }, [user]);
-
-  const login = (email: string) => {
-    // This is a mock implementation
-    const newUser: User = {
-      id: `user-${Math.random().toString(36).substring(2, 9)}`,
-      name: email.split('@')[0],
-      email: email,
-      avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=9b87f5&color=fff`
-    };
-    
-    setUser(newUser);
-    toast.success('Successfully logged in!');
   };
 
-  const loginWithGoogle = () => {
-    // This is a mock implementation of Google login
-    const mockGoogleUser: User = {
-      id: `google-${Math.random().toString(36).substring(2, 9)}`,
-      name: 'Google User',
-      email: 'user@gmail.com',
-      avatar: `https://ui-avatars.com/api/?name=Google+User&background=9b87f5&color=fff`
-    };
-    
-    setUser(mockGoogleUser);
-    toast.success('Successfully logged in with Google!');
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error logging in with Google:', error);
+      toast.error('Failed to log in with Google. Please try again.');
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    toast.info('You have been logged out');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out. Please try again.');
+    }
   };
 
   return (

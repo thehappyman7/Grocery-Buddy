@@ -23,18 +23,22 @@ interface LoginDialogProps {
 const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
   const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      login(email);
-      onOpenChange(false);
+      setIsLoading(true);
+      await login(email);
+      setIsLoading(false);
+      // Note: We don't close the dialog automatically for email login since the user needs to check their email
     }
   };
 
-  const handleGoogleLogin = () => {
-    loginWithGoogle();
-    onOpenChange(false);
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    await loginWithGoogle();
+    // Dialog will close automatically when user returns from Google OAuth flow
   };
   
   return (
@@ -68,6 +72,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
               onClick={handleGoogleLogin}
               variant="outline" 
               className="w-full sm:w-auto border-grocery-purple text-grocery-purple hover:bg-grocery-purple-light gap-2"
+              disabled={isLoading}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -81,8 +86,9 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
               type="submit"
               variant="default" 
               className="w-full sm:w-auto bg-grocery-purple hover:bg-grocery-purple/90"
+              disabled={isLoading}
             >
-              Sign in with Email
+              {isLoading ? "Loading..." : "Sign in with Email"}
             </Button>
           </DialogFooter>
         </form>
