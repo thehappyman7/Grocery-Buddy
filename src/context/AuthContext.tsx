@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { cleanupAuthState } from '@/utils/authUtils';
 
 interface User {
   id: string;
@@ -50,6 +51,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
+      
       if (event === 'SIGNED_IN' && session) {
         const userData = session.user;
         setUser({
@@ -75,6 +78,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string) => {
     try {
+      // Clean up existing auth state before login
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
@@ -95,6 +101,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginWithGoogle = async () => {
     try {
+      // Clean up existing auth state before login
+      cleanupAuthState();
+      
+      // Attempt global sign out first to clear any existing sessions
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Sign out before Google login failed:', err);
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -103,16 +120,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       if (error) {
+        console.error('Google auth error details:', error);
         throw error;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error logging in with Google:', error);
-      toast.error('Failed to log in with Google. Please try again.');
+      toast.error(error?.message || 'Failed to log in with Google. Please try again.');
     }
   };
 
   const logout = async () => {
     try {
+      // Clean up existing auth state before logout
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {

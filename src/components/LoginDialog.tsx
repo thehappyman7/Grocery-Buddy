@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/context/AuthContext';
 import { X } from 'lucide-react';
+import { cleanupAuthState } from '@/utils/authUtils';
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,16 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    await loginWithGoogle();
-    // Dialog will close automatically when user returns from Google OAuth flow
+    try {
+      setIsLoading(true);
+      // Clean up existing auth state before login
+      cleanupAuthState();
+      await loginWithGoogle();
+      // Dialog will close automatically when user returns from Google OAuth flow
+    } catch (error) {
+      console.error("Google login error:", error);
+      setIsLoading(false);
+    }
   };
   
   return (
