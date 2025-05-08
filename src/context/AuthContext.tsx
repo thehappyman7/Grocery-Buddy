@@ -1,12 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-
-// Create a Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
