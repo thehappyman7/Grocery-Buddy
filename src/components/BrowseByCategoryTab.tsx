@@ -14,7 +14,7 @@ const PREDEFINED_CATEGORIES = [
 ];
 
 const BrowseByCategoryTab = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { groceryItems } = useGrocery();
 
   // Get all unique categories from grocery items and predefined categories
@@ -25,12 +25,12 @@ const BrowseByCategoryTab = () => {
   ]));
 
   // Filter items based on selected category
-  const filteredItems = selectedCategory 
+  const filteredItems = selectedCategory && selectedCategory !== 'all'
     ? groceryItems.filter(item => item.category === selectedCategory)
     : groceryItems;
 
   const clearCategoryFilter = () => {
-    setSelectedCategory('');
+    setSelectedCategory('all');
   };
 
   return (
@@ -47,7 +47,7 @@ const BrowseByCategoryTab = () => {
                 <SelectValue placeholder="Show all items..." />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border shadow-lg z-50">
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {allCategoryNames.map((categoryName) => (
                   <SelectItem key={categoryName} value={categoryName}>
                     {categoryName}
@@ -60,12 +60,12 @@ const BrowseByCategoryTab = () => {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium">
-                {selectedCategory 
+                {selectedCategory && selectedCategory !== 'all'
                   ? `Items in ${selectedCategory} (${filteredItems.length})`
                   : `All Items (${filteredItems.length})`
                 }
               </h3>
-              {selectedCategory && (
+              {selectedCategory && selectedCategory !== 'all' && (
                 <button 
                   onClick={clearCategoryFilter}
                   className="text-sm text-muted-foreground hover:text-foreground"
@@ -83,7 +83,7 @@ const BrowseByCategoryTab = () => {
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                {selectedCategory 
+                {selectedCategory && selectedCategory !== 'all'
                   ? `No items found in ${selectedCategory} category`
                   : "No items added yet. Add some items in the 'Add Items' tab!"
                 }
