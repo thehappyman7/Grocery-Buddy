@@ -64,10 +64,14 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				grocery: {
-					'green': '#4ade80',
-					'green-light': '#f0fdf4',
-					'purple': '#9b87f5',
-					'purple-light': '#e5deff',
+					'green': 'hsl(var(--grocery-green))',
+					'green-light': 'hsl(var(--grocery-green-light))',
+					'purple': 'hsl(var(--grocery-purple))',
+					'purple-light': 'hsl(var(--grocery-purple-light))',
+					'blue': 'hsl(var(--grocery-blue))',
+					'blue-light': 'hsl(var(--grocery-blue-light))',
+					'orange': 'hsl(var(--grocery-orange))',
+					'orange-light': 'hsl(var(--grocery-orange-light))',
 				}
 			},
 			borderRadius: {

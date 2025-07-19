@@ -31,7 +31,7 @@ const ItemTyperTab = () => {
           onClick={toggleAddForm}
           variant="outline"
           size="sm"
-          className="border-grocery-purple text-grocery-purple hover:bg-grocery-purple-light flex items-center gap-2"
+          className="bg-gradient-to-r from-grocery-purple to-grocery-blue text-white border-0 hover:from-grocery-purple/80 hover:to-grocery-blue/80 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
         >
           {showAddForm ? (
             <>
