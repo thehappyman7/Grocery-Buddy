@@ -3,7 +3,6 @@ import React from 'react';
 import { GroceryProvider } from '@/context/GroceryContext';
 import Header from '@/components/Header';
 import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import ItemTyperTab from '@/components/ItemTyperTab';
 import BrowseByCategoryTab from '@/components/BrowseByCategoryTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,7 +36,6 @@ const Index = () => {
             </Tabs>
           </div>
         </main>
-        <Footer />
       </div>
     </GroceryProvider>
   );

@@ -74,6 +74,9 @@ export default {
 					'orange-light': 'hsl(var(--grocery-orange-light))',
 				}
 			},
+			fontFamily: {
+				primary: ["var(--font-primary)", "Inter", "system-ui", "sans-serif"],
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',

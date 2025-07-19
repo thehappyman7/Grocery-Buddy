@@ -46,6 +46,16 @@ const ItemTyperTab = () => {
       </div>
       
       {showAddForm && <AddGroceryForm />}
+      
+      <div className="bg-gradient-to-r from-grocery-green-light to-grocery-blue-light rounded-lg p-4 border border-grocery-green/20 shadow-md">
+        <h2 className="text-lg font-semibold text-grocery-purple mb-1 font-primary flex items-center gap-2">
+          🛒 Your Cart
+        </h2>
+        <p className="text-sm text-gray-700">
+          Items you've added to your shopping list
+        </p>
+      </div>
+      
       <GroceryList />
     </div>
   );

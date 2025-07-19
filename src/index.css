@@ -44,6 +44,9 @@
     --grocery-blue-light: 200 100% 90%;
     --grocery-orange: 25 100% 75%;
     --grocery-orange-light: 25 100% 90%;
+    
+    /* Font Family */
+    --font-primary: 'Inter', system-ui, sans-serif;
 
     --sidebar-background: 240 100% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
