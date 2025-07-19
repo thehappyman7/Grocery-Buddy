@@ -80,7 +80,7 @@ const BrowseByCategoryTab = () => {
               <SelectTrigger>
                 <SelectValue placeholder="Choose a category..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-border shadow-lg z-50">
                 {allCategoryNames.map((categoryName) => (
                   <SelectItem key={categoryName} value={categoryName}>
                     {categoryName}
