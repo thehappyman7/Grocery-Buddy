@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AddGroceryForm from '@/components/AddGroceryForm';
 import GroceryList from '@/components/GroceryList';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
 
 const ItemTyperTab = () => {
@@ -47,16 +48,17 @@ const ItemTyperTab = () => {
       
       {showAddForm && <AddGroceryForm />}
       
-      <div className="bg-gradient-to-r from-grocery-green-light to-grocery-blue-light rounded-lg p-4 border border-grocery-green/20 shadow-md">
-        <h2 className="text-lg font-semibold text-grocery-purple mb-1 font-primary flex items-center gap-2">
-          🛒 Your Cart
-        </h2>
-        <p className="text-sm text-gray-700">
-          Items you've added to your shopping list
-        </p>
-      </div>
-      
-      <GroceryList />
+      {/* Cart View Section - Matching second tab design */}
+      <Card className="border-grocery-green-light bg-gradient-to-br from-grocery-green-light/20 to-grocery-orange-light/20 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-grocery-green to-grocery-orange rounded-t-lg">
+          <CardTitle className="text-lg text-white flex items-center gap-2">
+            🛒 Your Cart
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <GroceryList />
+        </CardContent>
+      </Card>
     </div>
   );
 };
