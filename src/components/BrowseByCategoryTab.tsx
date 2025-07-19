@@ -1,70 +1,36 @@
 import React, { useState } from 'react';
 import { useGrocery } from '@/context/GroceryContext';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import GroceryItem from './GroceryItem';
 
 const PREDEFINED_CATEGORIES = [
-  {
-    name: 'Grains',
-    items: ['Rice (Basmati)', 'Rice (Jasmine)', 'Wheat Flour', 'Quinoa', 'Oats', 'Barley']
-  },
-  {
-    name: 'Pulses',
-    items: ['Toor Dal', 'Chana Dal', 'Moong Dal', 'Masoor Dal', 'Urad Dal', 'Rajma', 'Chickpeas']
-  },
-  {
-    name: 'Vegetables',
-    items: ['Onions', 'Tomatoes', 'Potatoes', 'Carrots', 'Spinach', 'Cauliflower', 'Broccoli']
-  },
-  {
-    name: 'Fruits',
-    items: ['Apples', 'Bananas', 'Oranges', 'Mangoes', 'Grapes', 'Strawberries', 'Lemons']
-  },
-  {
-    name: 'Dairy',
-    items: ['Milk', 'Yogurt', 'Cheese', 'Butter', 'Cream', 'Paneer']
-  },
-  {
-    name: 'Spices',
-    items: ['Turmeric', 'Cumin', 'Coriander', 'Red Chili', 'Garam Masala', 'Cardamom', 'Cinnamon']
-  }
+  'Grains',
+  'Pulses', 
+  'Vegetables',
+  'Fruits',
+  'Dairy',
+  'Spices'
 ];
 
 const BrowseByCategoryTab = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const { addItem, groceryItems } = useGrocery();
+  const { groceryItems } = useGrocery();
 
   // Get all unique categories from grocery items and predefined categories
   const existingCategories = Array.from(new Set(groceryItems.map(item => item.category)));
   const allCategoryNames = Array.from(new Set([
-    ...PREDEFINED_CATEGORIES.map(cat => cat.name),
+    ...PREDEFINED_CATEGORIES,
     ...existingCategories
   ]));
 
-  // Create dynamic category data based on actual grocery items
-  const getDynamicCategoryData = (categoryName: string) => {
-    const predefinedCategory = PREDEFINED_CATEGORIES.find(cat => cat.name === categoryName);
-    const itemsInCategory = groceryItems
-      .filter(item => item.category === categoryName)
-      .map(item => item.name);
-    
-    if (predefinedCategory) {
-      // For predefined categories, show predefined items plus any added items
-      const allItems = Array.from(new Set([...predefinedCategory.items, ...itemsInCategory]));
-      return { name: categoryName, items: allItems };
-    } else {
-      // For new categories, show only the added items
-      return { name: categoryName, items: itemsInCategory };
-    }
-  };
+  // Filter items based on selected category
+  const filteredItems = selectedCategory 
+    ? groceryItems.filter(item => item.category === selectedCategory)
+    : groceryItems;
 
-  const selectedCategoryData = selectedCategory ? getDynamicCategoryData(selectedCategory) : null;
-
-  const handleAddItem = (itemName: string) => {
-    addItem(itemName, selectedCategory);
+  const clearCategoryFilter = () => {
+    setSelectedCategory('');
   };
 
   return (
@@ -75,12 +41,13 @@ const BrowseByCategoryTab = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Select a Category</label>
+            <label className="text-sm font-medium mb-2 block">Filter by Category (Optional)</label>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a category..." />
+                <SelectValue placeholder="Show all items..." />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border shadow-lg z-50">
+                <SelectItem value="">All Categories</SelectItem>
                 {allCategoryNames.map((categoryName) => (
                   <SelectItem key={categoryName} value={categoryName}>
                     {categoryName}
@@ -90,38 +57,39 @@ const BrowseByCategoryTab = () => {
             </Select>
           </div>
 
-          {selectedCategoryData && (
-            <div>
-              <h3 className="font-medium mb-3">
-                Items in {selectedCategory} ({selectedCategoryData.items.length})
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">
+                {selectedCategory 
+                  ? `Items in ${selectedCategory} (${filteredItems.length})`
+                  : `All Items (${filteredItems.length})`
+                }
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {selectedCategoryData.items.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 transition-colors"
-                  >
-                    <span className="text-sm">{item}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAddItem(item)}
-                      className="ml-2"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add
-                    </Button>
-                  </div>
+              {selectedCategory && (
+                <button 
+                  onClick={clearCategoryFilter}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Clear filter
+                </button>
+              )}
+            </div>
+            
+            {filteredItems.length > 0 ? (
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {filteredItems.map((item) => (
+                  <GroceryItem key={item.id} item={item} />
                 ))}
               </div>
-            </div>
-          )}
-
-          {!selectedCategory && (
-            <div className="text-center py-8 text-muted-foreground">
-              Select a category above to view available items
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                {selectedCategory 
+                  ? `No items found in ${selectedCategory} category`
+                  : "No items added yet. Add some items in the 'Add Items' tab!"
+                }
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
