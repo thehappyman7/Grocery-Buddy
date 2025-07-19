@@ -114,7 +114,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Use the exact origin for redirect
       const redirectUrl = window.location.origin;
-      console.log("Using redirect URL:", redirectUrl);
+      console.log("Current origin:", window.location.origin);
+      console.log("Current port:", window.location.port);
+      console.log("Full redirect URL:", redirectUrl);
+      
+      // Check if we're on the correct port
+      if (window.location.port !== '8080' && window.location.hostname === 'localhost') {
+        console.warn("⚠️ Server should be running on port 8080, but detected port:", window.location.port);
+        toast.error("Server port mismatch. Please ensure you're accessing localhost:8080");
+        return;
+      }
 
       const { error, data } = await supabase.auth.signInWithOAuth({
         provider: 'google',
