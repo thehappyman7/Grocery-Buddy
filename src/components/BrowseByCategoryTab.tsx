@@ -35,9 +35,33 @@ const PREDEFINED_CATEGORIES = [
 
 const BrowseByCategoryTab = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const { addItem } = useGrocery();
+  const { addItem, groceryItems } = useGrocery();
 
-  const selectedCategoryData = PREDEFINED_CATEGORIES.find(cat => cat.name === selectedCategory);
+  // Get all unique categories from grocery items and predefined categories
+  const existingCategories = Array.from(new Set(groceryItems.map(item => item.category)));
+  const allCategoryNames = Array.from(new Set([
+    ...PREDEFINED_CATEGORIES.map(cat => cat.name),
+    ...existingCategories
+  ]));
+
+  // Create dynamic category data based on actual grocery items
+  const getDynamicCategoryData = (categoryName: string) => {
+    const predefinedCategory = PREDEFINED_CATEGORIES.find(cat => cat.name === categoryName);
+    const itemsInCategory = groceryItems
+      .filter(item => item.category === categoryName)
+      .map(item => item.name);
+    
+    if (predefinedCategory) {
+      // For predefined categories, show predefined items plus any added items
+      const allItems = Array.from(new Set([...predefinedCategory.items, ...itemsInCategory]));
+      return { name: categoryName, items: allItems };
+    } else {
+      // For new categories, show only the added items
+      return { name: categoryName, items: itemsInCategory };
+    }
+  };
+
+  const selectedCategoryData = selectedCategory ? getDynamicCategoryData(selectedCategory) : null;
 
   const handleAddItem = (itemName: string) => {
     addItem(itemName, selectedCategory);
@@ -57,9 +81,9 @@ const BrowseByCategoryTab = () => {
                 <SelectValue placeholder="Choose a category..." />
               </SelectTrigger>
               <SelectContent>
-                {PREDEFINED_CATEGORIES.map((category) => (
-                  <SelectItem key={category.name} value={category.name}>
-                    {category.name}
+                {allCategoryNames.map((categoryName) => (
+                  <SelectItem key={categoryName} value={categoryName}>
+                    {categoryName}
                   </SelectItem>
                 ))}
               </SelectContent>
