@@ -26,7 +26,7 @@ const Index = () => {
                   Browse by Category
                 </TabsTrigger>
                 <TabsTrigger value="what-can-i-cook" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md font-medium">
-                  What Can I Cook?
+                  Chef Mode
                 </TabsTrigger>
               </TabsList>
               
