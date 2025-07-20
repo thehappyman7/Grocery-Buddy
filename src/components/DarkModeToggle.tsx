@@ -31,6 +31,9 @@ const DarkModeToggle = () => {
 
   return (
     <div className="flex items-center space-x-2">
+      <span className="text-xs text-muted-foreground font-medium">
+        {isDark ? 'Dark Mode' : 'Light Mode'}
+      </span>
       <Switch
         id="dark-mode"
         checked={isDark}
