@@ -4,58 +4,58 @@
 
 @layer base {
   :root {
-    /* Softer Design System for Light Mode */
-    --background: 240 30% 96%;
-    --foreground: 240 15% 20%;
+    /* Extra Gentle Design System for Light Mode */
+    --background: 240 20% 94%;
+    --foreground: 240 15% 25%;
 
-    --card: 240 30% 97%;
-    --card-foreground: 240 15% 20%;
+    --card: 240 20% 95%;
+    --card-foreground: 240 15% 25%;
 
-    --popover: 240 30% 96%;
-    --popover-foreground: 240 15% 20%;
+    --popover: 240 20% 94%;
+    --popover-foreground: 240 15% 25%;
 
-    --primary: 280 60% 55%;
+    --primary: 280 45% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 40% 80%;
-    --secondary-foreground: 200 30% 30%;
+    --secondary: 200 30% 75%;
+    --secondary-foreground: 200 30% 35%;
 
-    --muted: 210 40% 92%;
-    --muted-foreground: 210 20% 50%;
+    --muted: 210 25% 88%;
+    --muted-foreground: 210 20% 55%;
 
-    --accent: 45 50% 75%;
-    --accent-foreground: 45 30% 30%;
+    --accent: 45 35% 70%;
+    --accent-foreground: 45 30% 35%;
 
-    --destructive: 0 60% 55%;
+    --destructive: 0 50% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 85%;
-    --input: 220 20% 90%;
-    --ring: 280 60% 55%;
+    --border: 220 15% 80%;
+    --input: 220 15% 85%;
+    --ring: 280 45% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom Grocery Colors - Softer tones */
-    --grocery-purple: 280 60% 55%;
-    --grocery-purple-light: 280 40% 90%;
-    --grocery-green: 140 50% 50%;
-    --grocery-green-light: 140 40% 85%;
-    --grocery-blue: 200 60% 60%;
-    --grocery-blue-light: 200 40% 85%;
-    --grocery-orange: 25 70% 65%;
-    --grocery-orange-light: 25 50% 85%;
+    /* Custom Grocery Colors - Very soft tones */
+    --grocery-purple: 280 45% 50%;
+    --grocery-purple-light: 280 25% 88%;
+    --grocery-green: 140 40% 45%;
+    --grocery-green-light: 140 25% 82%;
+    --grocery-blue: 200 45% 55%;
+    --grocery-blue-light: 200 25% 82%;
+    --grocery-orange: 25 55% 60%;
+    --grocery-orange-light: 25 35% 82%;
     
     /* Font Family */
     --font-primary: 'Inter', system-ui, sans-serif;
 
-    --sidebar-background: 240 30% 96%;
-    --sidebar-foreground: 240 15% 25%;
-    --sidebar-primary: 280 60% 55%;
+    --sidebar-background: 240 20% 94%;
+    --sidebar-foreground: 240 15% 30%;
+    --sidebar-primary: 280 45% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 200 40% 80%;
-    --sidebar-accent-foreground: 200 30% 30%;
-    --sidebar-border: 220 20% 85%;
-    --sidebar-ring: 280 60% 55%;
+    --sidebar-accent: 200 30% 75%;
+    --sidebar-accent-foreground: 200 30% 35%;
+    --sidebar-border: 220 15% 80%;
+    --sidebar-ring: 280 45% 50%;
   }
 
   .dark {
