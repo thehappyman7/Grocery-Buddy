@@ -9,37 +9,212 @@ interface Recipe {
 }
 
 const recipes: Recipe[] = [
+  // International Dishes
   {
     name: "Pasta",
-    ingredients: ["Pasta", "Tomatoes", "Onions", "Garlic", "Olive Oil", "Cheese"]
+    ingredients: ["pasta", "tomatoes", "onions", "garlic", "olive oil", "cheese"]
   },
   {
     name: "Omelette",
-    ingredients: ["Eggs", "Milk", "Butter", "Salt", "Pepper"]
+    ingredients: ["eggs", "milk", "butter", "salt", "pepper"]
   },
   {
     name: "Garden Salad",
-    ingredients: ["Lettuce", "Tomatoes", "Cucumbers", "Carrots", "Olive Oil"]
+    ingredients: ["lettuce", "tomatoes", "cucumbers", "carrots", "olive oil"]
   },
   {
     name: "Fried Rice",
-    ingredients: ["Rice", "Eggs", "Soy Sauce", "Vegetables", "Oil"]
+    ingredients: ["rice", "eggs", "soy sauce", "vegetables", "oil"]
   },
   {
     name: "Chicken Sandwich",
-    ingredients: ["Bread", "Chicken", "Lettuce", "Tomatoes", "Mayonnaise"]
+    ingredients: ["bread", "chicken", "lettuce", "tomatoes", "mayonnaise"]
   },
   {
     name: "Vegetable Soup",
-    ingredients: ["Broth", "Carrots", "Onions", "Celery", "Potatoes"]
+    ingredients: ["broth", "carrots", "onions", "celery", "potatoes"]
   },
   {
     name: "Pancakes",
-    ingredients: ["Flour", "Eggs", "Milk", "Sugar", "Butter"]
+    ingredients: ["flour", "eggs", "milk", "sugar", "butter"]
   },
   {
     name: "Grilled Cheese",
-    ingredients: ["Bread", "Cheese", "Butter"]
+    ingredients: ["bread", "cheese", "butter"]
+  },
+  {
+    name: "Pizza Margherita",
+    ingredients: ["pizza dough", "tomato sauce", "mozzarella", "basil", "olive oil"]
+  },
+  {
+    name: "Caesar Salad",
+    ingredients: ["lettuce", "parmesan", "croutons", "anchovy", "olive oil", "lemon"]
+  },
+  {
+    name: "Avocado Toast",
+    ingredients: ["bread", "avocado", "salt", "pepper", "lemon"]
+  },
+  {
+    name: "Greek Salad",
+    ingredients: ["tomatoes", "cucumbers", "olives", "feta cheese", "olive oil", "oregano"]
+  },
+  {
+    name: "Tacos",
+    ingredients: ["tortillas", "chicken", "onions", "cilantro", "lime", "cheese"]
+  },
+  {
+    name: "Stir Fry",
+    ingredients: ["vegetables", "soy sauce", "garlic", "ginger", "oil", "rice"]
+  },
+  
+  // North Indian Dishes
+  {
+    name: "Dal Tadka",
+    ingredients: ["dal", "turmeric", "cumin", "onions", "tomatoes", "garlic", "ginger", "ghee"]
+  },
+  {
+    name: "Rajma (Kidney Bean Curry)",
+    ingredients: ["kidney beans", "onions", "tomatoes", "ginger", "garlic", "cumin", "coriander", "garam masala"]
+  },
+  {
+    name: "Aloo Gobi",
+    ingredients: ["potatoes", "cauliflower", "onions", "turmeric", "cumin", "coriander", "ginger", "garlic"]
+  },
+  {
+    name: "Chicken Curry",
+    ingredients: ["chicken", "onions", "tomatoes", "ginger", "garlic", "turmeric", "coriander", "garam masala", "oil"]
+  },
+  {
+    name: "Paneer Butter Masala",
+    ingredients: ["paneer", "tomatoes", "cream", "butter", "onions", "ginger", "garlic", "garam masala"]
+  },
+  {
+    name: "Chole (Chickpea Curry)",
+    ingredients: ["chickpeas", "onions", "tomatoes", "ginger", "garlic", "cumin", "coriander", "garam masala"]
+  },
+  {
+    name: "Palak Paneer",
+    ingredients: ["spinach", "paneer", "onions", "tomatoes", "ginger", "garlic", "cream", "garam masala"]
+  },
+  {
+    name: "Biryani",
+    ingredients: ["rice", "chicken", "onions", "yogurt", "ginger", "garlic", "saffron", "ghee", "garam masala"]
+  },
+  
+  // South Indian Dishes
+  {
+    name: "Sambar",
+    ingredients: ["dal", "vegetables", "tamarind", "sambar powder", "turmeric", "curry leaves", "mustard seeds"]
+  },
+  {
+    name: "Rasam",
+    ingredients: ["dal", "tomatoes", "tamarind", "rasam powder", "curry leaves", "mustard seeds", "asafoetida"]
+  },
+  {
+    name: "Dosa",
+    ingredients: ["rice", "dal", "fenugreek seeds", "salt"]
+  },
+  {
+    name: "Idli",
+    ingredients: ["rice", "dal", "fenugreek seeds", "salt"]
+  },
+  {
+    name: "Coconut Rice",
+    ingredients: ["rice", "coconut", "curry leaves", "mustard seeds", "dal", "ginger", "green chili"]
+  },
+  {
+    name: "Upma",
+    ingredients: ["semolina", "onions", "curry leaves", "mustard seeds", "dal", "ginger", "green chili"]
+  },
+  {
+    name: "Medu Vada",
+    ingredients: ["dal", "ginger", "green chili", "curry leaves", "asafoetida", "salt", "oil"]
+  },
+  
+  // Gujarati Dishes
+  {
+    name: "Dhokla",
+    ingredients: ["gram flour", "yogurt", "ginger", "green chili", "turmeric", "mustard seeds", "curry leaves"]
+  },
+  {
+    name: "Khichdi",
+    ingredients: ["rice", "dal", "turmeric", "cumin", "asafoetida", "ginger", "ghee"]
+  },
+  {
+    name: "Thepla",
+    ingredients: ["wheat flour", "fenugreek leaves", "turmeric", "cumin", "coriander", "ginger", "green chili"]
+  },
+  {
+    name: "Undhiyu",
+    ingredients: ["vegetables", "green beans", "potatoes", "sweet potato", "ginger", "garlic", "coconut", "coriander"]
+  },
+  {
+    name: "Gujarati Dal",
+    ingredients: ["dal", "jaggery", "tamarind", "turmeric", "asafoetida", "ginger", "green chili", "curry leaves"]
+  },
+  
+  // Bengali Dishes
+  {
+    name: "Fish Curry (Macher Jhol)",
+    ingredients: ["fish", "potatoes", "onions", "tomatoes", "ginger", "garlic", "turmeric", "cumin", "mustard oil"]
+  },
+  {
+    name: "Aloo Posto",
+    ingredients: ["potatoes", "poppy seeds", "mustard oil", "turmeric", "salt", "green chili"]
+  },
+  {
+    name: "Dal Bhaat",
+    ingredients: ["rice", "dal", "turmeric", "cumin", "onions", "garlic", "ginger", "mustard oil"]
+  },
+  {
+    name: "Shukto",
+    ingredients: ["vegetables", "bitter gourd", "bottle gourd", "ginger", "cumin", "mustard seeds", "mustard oil"]
+  },
+  {
+    name: "Mishti Doi",
+    ingredients: ["milk", "jaggery", "yogurt"]
+  },
+  
+  // Simple 2-3 Ingredient Dishes
+  {
+    name: "Rice and Dal",
+    ingredients: ["rice", "dal"]
+  },
+  {
+    name: "Bread Omelette",
+    ingredients: ["bread", "eggs"]
+  },
+  {
+    name: "Milk Tea",
+    ingredients: ["milk", "tea", "sugar"]
+  },
+  {
+    name: "Simple Khichdi",
+    ingredients: ["rice", "dal", "turmeric"]
+  },
+  {
+    name: "Butter Rice",
+    ingredients: ["rice", "butter", "salt"]
+  },
+  {
+    name: "Scrambled Eggs",
+    ingredients: ["eggs", "salt", "pepper"]
+  },
+  {
+    name: "Bread and Butter",
+    ingredients: ["bread", "butter"]
+  },
+  {
+    name: "Rice with Ghee",
+    ingredients: ["rice", "ghee", "salt"]
+  },
+  {
+    name: "Simple Pasta",
+    ingredients: ["pasta", "olive oil", "salt"]
+  },
+  {
+    name: "Toast",
+    ingredients: ["bread"]
   }
 ];
 
