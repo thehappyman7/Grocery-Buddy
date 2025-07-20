@@ -4,58 +4,58 @@
 
 @layer base {
   :root {
-    /* Colorful Design System */
-    --background: 240 100% 98%;
-    --foreground: 240 10% 15%;
+    /* Softer Design System for Light Mode */
+    --background: 240 30% 96%;
+    --foreground: 240 15% 20%;
 
-    --card: 240 100% 99%;
-    --card-foreground: 240 10% 15%;
+    --card: 240 30% 97%;
+    --card-foreground: 240 15% 20%;
 
-    --popover: 240 100% 98%;
-    --popover-foreground: 240 10% 15%;
+    --popover: 240 30% 96%;
+    --popover-foreground: 240 15% 20%;
 
-    --primary: 280 100% 70%;
+    --primary: 280 60% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 100% 85%;
-    --secondary-foreground: 200 30% 25%;
+    --secondary: 200 40% 80%;
+    --secondary-foreground: 200 30% 30%;
 
-    --muted: 210 60% 95%;
-    --muted-foreground: 210 15% 45%;
+    --muted: 210 40% 92%;
+    --muted-foreground: 210 20% 50%;
 
-    --accent: 45 100% 80%;
-    --accent-foreground: 45 30% 25%;
+    --accent: 45 50% 75%;
+    --accent-foreground: 45 30% 30%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 60% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 25% 90%;
-    --input: 220 25% 90%;
-    --ring: 280 100% 70%;
+    --border: 220 20% 85%;
+    --input: 220 20% 90%;
+    --ring: 280 60% 55%;
 
     --radius: 0.75rem;
 
-    /* Custom Grocery Colors */
-    --grocery-purple: 280 100% 70%;
-    --grocery-purple-light: 280 100% 95%;
-    --grocery-green: 140 60% 60%;
-    --grocery-green-light: 140 60% 90%;
-    --grocery-blue: 200 100% 70%;
-    --grocery-blue-light: 200 100% 90%;
-    --grocery-orange: 25 100% 75%;
-    --grocery-orange-light: 25 100% 90%;
+    /* Custom Grocery Colors - Softer tones */
+    --grocery-purple: 280 60% 55%;
+    --grocery-purple-light: 280 40% 90%;
+    --grocery-green: 140 50% 50%;
+    --grocery-green-light: 140 40% 85%;
+    --grocery-blue: 200 60% 60%;
+    --grocery-blue-light: 200 40% 85%;
+    --grocery-orange: 25 70% 65%;
+    --grocery-orange-light: 25 50% 85%;
     
     /* Font Family */
     --font-primary: 'Inter', system-ui, sans-serif;
 
-    --sidebar-background: 240 100% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 280 100% 70%;
+    --sidebar-background: 240 30% 96%;
+    --sidebar-foreground: 240 15% 25%;
+    --sidebar-primary: 280 60% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 200 100% 85%;
-    --sidebar-accent-foreground: 200 30% 25%;
-    --sidebar-border: 220 25% 90%;
-    --sidebar-ring: 280 100% 70%;
+    --sidebar-accent: 200 40% 80%;
+    --sidebar-accent-foreground: 200 30% 30%;
+    --sidebar-border: 220 20% 85%;
+    --sidebar-ring: 280 60% 55%;
   }
 
   .dark {
