@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Navigation from '@/components/Navigation';
 import ItemTyperTab from '@/components/ItemTyperTab';
 import BrowseByCategoryTab from '@/components/BrowseByCategoryTab';
+import WhatCanICookTab from '@/components/WhatCanICookTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Index = () => {
@@ -17,12 +18,15 @@ const Index = () => {
             <Header />
             
             <Tabs defaultValue="add-items" className="mt-6">
-              <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-xl">
                 <TabsTrigger value="add-items" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md font-medium">
                   Add Items
                 </TabsTrigger>
                 <TabsTrigger value="browse-category" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md font-medium">
                   Browse by Category
+                </TabsTrigger>
+                <TabsTrigger value="what-can-i-cook" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md font-medium">
+                  What Can I Cook?
                 </TabsTrigger>
               </TabsList>
               
@@ -32,6 +36,10 @@ const Index = () => {
               
               <TabsContent value="browse-category" className="mt-6">
                 <BrowseByCategoryTab />
+              </TabsContent>
+              
+              <TabsContent value="what-can-i-cook" className="mt-6">
+                <WhatCanICookTab />
               </TabsContent>
             </Tabs>
           </div>
