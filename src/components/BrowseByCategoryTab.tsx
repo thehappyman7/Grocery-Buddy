@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import GroceryList from './GroceryList';
-import DarkModeToggle from './DarkModeToggle';
 
 const PREDEFINED_CATEGORIES = [
   {
@@ -115,13 +114,6 @@ const BrowseByCategoryTab = () => {
               <p className="font-medium">Select a category above to browse available items</p>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Dark Mode Toggle Section - Replaces Shopping Tips */}
-      <Card className="border-border bg-card shadow-lg">
-        <CardContent className="p-6">
-          <DarkModeToggle />
         </CardContent>
       </Card>
 
