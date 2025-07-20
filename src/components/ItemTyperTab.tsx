@@ -47,9 +47,9 @@ const ItemTyperTab = () => {
       
       {showAddForm && <AddGroceryForm />}
       
-      {/* Cart View Section - Original design */}
+      {/* Cart View Section - Original design restored */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-primary border-b pb-2">
           Your Cart
         </h2>
         <GroceryList />

@@ -118,16 +118,16 @@ const BrowseByCategoryTab = () => {
         </CardContent>
       </Card>
 
-      {/* Dark Mode Toggle Section */}
+      {/* Dark Mode Toggle Section - Replaces Shopping Tips */}
       <Card className="border-border bg-card shadow-lg">
         <CardContent className="p-6">
           <DarkModeToggle />
         </CardContent>
       </Card>
 
-      {/* Cart View Section - Original design */}
+      {/* Cart View Section - Using original first tab design */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-primary">
+        <h2 className="text-lg font-semibold text-primary border-b pb-2">
           Your Cart
         </h2>
         <GroceryList />

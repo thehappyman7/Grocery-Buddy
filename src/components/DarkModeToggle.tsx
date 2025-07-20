@@ -30,10 +30,13 @@ const DarkModeToggle = () => {
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <Label htmlFor="dark-mode" className="text-sm font-medium">
-        Dark Mode
-      </Label>
+    <div className="flex items-center justify-between">
+      <div>
+        <Label htmlFor="dark-mode" className="text-sm font-medium text-primary">
+          Dark Mode
+        </Label>
+        <p className="text-xs text-muted-foreground">Toggle between light and dark themes</p>
+      </div>
       <Switch
         id="dark-mode"
         checked={isDark}
