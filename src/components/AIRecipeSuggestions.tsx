@@ -2,19 +2,39 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Check, X, Clock, Users, ChefHat, Globe } from 'lucide-react';
+import { Check, X, Clock, Users, ChefHat, Globe, Leaf } from 'lucide-react';
 import { findRecipesByIngredients, RecipeWithMatch } from '@/data/recipeDatabase';
 
 interface AIRecipeSuggestionsProps {
   selectedIngredients: string[];
+  isVegetarian?: boolean;
 }
 
-const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngredients }) => {
+const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngredients, isVegetarian = false }) => {
   const recipesWithMatches = findRecipesByIngredients(selectedIngredients);
   
+  // Helper function to check if a recipe is vegetarian
+  const isRecipeVegetarian = (recipe: any) => {
+    const nonVegIngredients = ['chicken', 'beef', 'pork', 'fish', 'mutton', 'lamb', 'meat', 'anchovy'];
+    const nonVegTags = ['non-vegetarian', 'meat', 'fish', 'poultry'];
+    
+    // Check ingredients
+    const hasNonVegIngredients = recipe.ingredients.some((ingredient: string) =>
+      nonVegIngredients.some(nonVeg => ingredient.toLowerCase().includes(nonVeg))
+    );
+    
+    // Check tags
+    const hasNonVegTags = recipe.tags.some((tag: string) =>
+      nonVegTags.some(nonVeg => tag.toLowerCase().includes(nonVeg))
+    );
+    
+    return !hasNonVegIngredients && !hasNonVegTags;
+  };
+
   // Sort by match percentage and then by difficulty (Easy first)
   const sortedRecipes = recipesWithMatches
     .filter(recipe => recipe.matchPercentage > 0)
+    .filter(recipe => !isVegetarian || isRecipeVegetarian(recipe))
     .sort((a, b) => {
       if (b.matchPercentage !== a.matchPercentage) {
         return b.matchPercentage - a.matchPercentage;
@@ -63,6 +83,11 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
           <h3 className="text-lg font-semibold text-foreground mb-2">No Perfect Matches Yet</h3>
           <p className="text-muted-foreground mb-4">
             Try adding more ingredients or search for specific items like "rice", "dal", "pasta", or "eggs"
+            {isVegetarian && (
+              <span className="block mt-2 text-green-600 dark:text-green-400">
+                🌱 Showing only vegetarian recipes - add ingredients like lentils, vegetables, or dairy for better matches
+              </span>
+            )}
           </p>
           <div className="text-sm text-muted-foreground">
             <p>💡 <strong>Tip:</strong> Even 2-3 basic ingredients can make great simple dishes!</p>
@@ -80,6 +105,12 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
         </h3>
         <p className="text-muted-foreground">
           Based on your {selectedIngredients.length} selected ingredients
+          {isVegetarian && (
+            <span className="ml-2 inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs">
+              <Leaf className="h-3 w-3" />
+              Vegetarian Only
+            </span>
+          )}
         </p>
       </div>
 
