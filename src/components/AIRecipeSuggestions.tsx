@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Check, X, Clock, Users, ChefHat, Globe, Leaf } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Check, X, Clock, Users, ChefHat, Globe, Leaf, ShoppingCart } from 'lucide-react';
 import { findRecipesByIngredients, RecipeWithMatch } from '@/data/recipeDatabase';
+import { useGrocery } from '@/context/GroceryContext';
+import { toast } from 'sonner';
 
 interface AIRecipeSuggestionsProps {
   selectedIngredients: string[];
@@ -12,6 +16,8 @@ interface AIRecipeSuggestionsProps {
 
 const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngredients, isVegetarian = false }) => {
   const recipesWithMatches = findRecipesByIngredients(selectedIngredients);
+  const { groceryItems, addItem } = useGrocery();
+  const [pendingIngredients, setPendingIngredients] = useState<string[]>([]);
   
   // Helper function to check if a recipe is vegetarian
   const isRecipeVegetarian = (recipe: any) => {
@@ -59,6 +65,34 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
       case 'Hard': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
       default: return 'bg-muted text-muted-foreground';
     }
+  };
+
+  const handleAddMissingIngredients = (recipe: RecipeWithMatch) => {
+    if (!recipe.missingIngredients || recipe.missingIngredients.length === 0) {
+      toast.info('No missing ingredients to add!');
+      return;
+    }
+
+    // Filter out ingredients that are already in the grocery list
+    const currentItemNames = groceryItems.map(item => item.name.toLowerCase());
+    const missingNotInCart = recipe.missingIngredients.filter(
+      ingredient => !currentItemNames.includes(ingredient.toLowerCase())
+    );
+
+    if (missingNotInCart.length === 0) {
+      toast.info('All missing ingredients are already in your grocery list!');
+      return;
+    }
+
+    setPendingIngredients(missingNotInCart);
+  };
+
+  const confirmAddIngredients = (recipe: RecipeWithMatch) => {
+    pendingIngredients.forEach(ingredient => {
+      addItem(ingredient, 'Recipe Ingredients');
+    });
+    toast.success(`Added ${pendingIngredients.length} ingredients to your grocery list!`);
+    setPendingIngredients([]);
   };
 
   if (selectedIngredients.length === 0) {
@@ -236,6 +270,48 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
                   <p className="text-blue-700 dark:text-blue-300 font-medium text-sm">
                     ⭐ Great match! Just {recipe.missingIngredients?.length || 0} ingredient{(recipe.missingIngredients?.length || 0) !== 1 ? 's' : ''} away from perfection.
                   </p>
+                </div>
+              )}
+
+              {/* Add Missing Ingredients Button */}
+              {recipe.missingIngredients && recipe.missingIngredients.length > 0 && (
+                <div className="pt-4 border-t border-border">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        onClick={() => handleAddMissingIngredients(recipe)}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Add Missing Ingredients to Cart ({recipe.missingIngredients.length})
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Add Ingredients to Cart</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Add these missing ingredients to your grocery list for "{recipe.name}"?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="max-h-40 overflow-y-auto">
+                        <div className="space-y-1">
+                          {pendingIngredients.map((ingredient, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2 bg-muted rounded">
+                              <ShoppingCart className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm">{ingredient}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setPendingIngredients([])}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => confirmAddIngredients(recipe)}>
+                          Add to Cart
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               )}
             </CardContent>
