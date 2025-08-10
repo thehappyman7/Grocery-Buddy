@@ -3,7 +3,7 @@ import { useGrocery } from '@/context/GroceryContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Loader2, Settings } from 'lucide-react';
+import { Plus, Loader2, Settings, Leaf, DollarSign } from 'lucide-react';
 import { ingredientDatabase, findIngredientMatches } from '@/data/ingredientDatabase';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,23 +16,39 @@ interface DynamicCategory {
 interface DynamicCategoryBrowserProps {
   country: string;
   cuisines: string[];
+  isVegetarian: boolean;
+  budget?: number;
   onChangePreferences: () => void;
 }
 
 const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({ 
   country, 
   cuisines, 
+  isVegetarian,
+  budget,
   onChangePreferences 
 }) => {
   const [categories, setCategories] = useState<DynamicCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [categoryItems, setCategoryItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addItem } = useGrocery();
+  const [totalSpent, setTotalSpent] = useState(0);
+  const { addItem, groceryItems } = useGrocery();
 
   useEffect(() => {
     generateCategories();
-  }, [country, cuisines]);
+  }, [country, cuisines, isVegetarian]);
+
+  useEffect(() => {
+    if (budget) {
+      // Calculate total spent from current items (mock prices for demo)
+      const spent = groceryItems.reduce((total, item) => {
+        const mockPrice = Math.random() * 10 + 2; // $2-12 range
+        return total + mockPrice;
+      }, 0);
+      setTotalSpent(spent);
+    }
+  }, [groceryItems, budget]);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -47,7 +63,7 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
       setLoading(true);
       
       const { data, error } = await supabase.functions.invoke('generate-categories', {
-        body: { country, cuisines }
+        body: { country, cuisines, isVegetarian, budget }
       });
 
       if (error) throw error;
@@ -94,7 +110,17 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
           return false;
         });
 
-        return categoryMatch && cuisineMatch;
+        // Filter out non-vegetarian items if vegetarian mode is enabled
+        const vegetarianMatch = !isVegetarian || !ingredient.category.toLowerCase().includes('meat') && 
+                                                !ingredient.category.toLowerCase().includes('fish') && 
+                                                !ingredient.category.toLowerCase().includes('poultry') &&
+                                                !ingredient.name.toLowerCase().includes('chicken') &&
+                                                !ingredient.name.toLowerCase().includes('beef') &&
+                                                !ingredient.name.toLowerCase().includes('pork') &&
+                                                !ingredient.name.toLowerCase().includes('fish') &&
+                                                !ingredient.name.toLowerCase().includes('mutton');
+
+        return categoryMatch && cuisineMatch && vegetarianMatch;
       });
 
       // Limit to 12-15 items per category and capitalize names
@@ -140,11 +166,52 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
               Change Preferences
             </Button>
           </CardTitle>
-          <p className="text-sm text-primary-foreground/80">
-            Categories for {country} • {cuisines.join(', ')} cuisine
-          </p>
+          <div className="text-sm text-primary-foreground/80 space-y-1">
+            <p>Categories for {country} • {cuisines.join(', ')} cuisine</p>
+            <div className="flex items-center gap-4 text-xs">
+              {isVegetarian && (
+                <span className="flex items-center gap-1 bg-green-600/20 px-2 py-1 rounded">
+                  <Leaf className="h-3 w-3" />
+                  Vegetarian Only
+                </span>
+              )}
+              {budget && (
+                <span className="flex items-center gap-1 bg-blue-600/20 px-2 py-1 rounded">
+                  <DollarSign className="h-3 w-3" />
+                  Budget: ${budget}/week
+                </span>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 p-6">
+          {/* Budget Progress */}
+          {budget && (
+            <div className="p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-primary">Weekly Budget Progress</span>
+                <span className={`text-sm font-semibold ${
+                  totalSpent > budget ? 'text-red-600' : 
+                  totalSpent > budget * 0.8 ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  ${totalSpent.toFixed(2)} / ${budget}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    totalSpent > budget ? 'bg-red-500' : 
+                    totalSpent > budget * 0.8 ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.min((totalSpent / budget) * 100, 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {totalSpent > budget ? 'Over budget!' : 
+                 totalSpent > budget * 0.8 ? 'Approaching budget limit' : 'Within budget'}
+              </p>
+            </div>
+          )}
           <div>
             <label className="text-sm font-medium mb-2 block text-primary">Select a Category</label>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>

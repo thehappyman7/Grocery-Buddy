@@ -4,7 +4,7 @@ import DynamicCategoryBrowser from './DynamicCategoryBrowser';
 import GroceryList from './GroceryList';
 
 const BrowseByCategoryTab = () => {
-  const [preferences, setPreferences] = useState<{country: string, cuisines: string[]} | null>(null);
+  const [preferences, setPreferences] = useState<{country: string, cuisines: string[], isVegetarian: boolean, budget?: number} | null>(null);
   const [showPreferences, setShowPreferences] = useState(false);
 
   // Load preferences from localStorage on mount
@@ -17,8 +17,8 @@ const BrowseByCategoryTab = () => {
     }
   }, []);
 
-  const handlePreferencesSet = (country: string, cuisines: string[]) => {
-    const newPreferences = { country, cuisines };
+  const handlePreferencesSet = (country: string, cuisines: string[], isVegetarian: boolean, budget?: number) => {
+    const newPreferences = { country, cuisines, isVegetarian, budget };
     setPreferences(newPreferences);
     localStorage.setItem('groceryBuddyPreferences', JSON.stringify(newPreferences));
     setShowPreferences(false);
@@ -46,6 +46,8 @@ const BrowseByCategoryTab = () => {
       <DynamicCategoryBrowser
         country={preferences.country}
         cuisines={preferences.cuisines}
+        isVegetarian={preferences.isVegetarian}
+        budget={preferences.budget}
         onChangePreferences={handleChangePreferences}
       />
 

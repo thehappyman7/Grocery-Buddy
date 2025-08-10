@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Settings, Globe, Utensils } from 'lucide-react';
+import { Settings, Globe, Utensils, Leaf, DollarSign } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 
 interface PreferencesSetupProps {
-  onPreferencesSet: (country: string, cuisines: string[]) => void;
+  onPreferencesSet: (country: string, cuisines: string[], isVegetarian: boolean, budget?: number) => void;
   isChangingPreferences?: boolean;
 }
 
@@ -29,6 +31,8 @@ const PreferencesSetup: React.FC<PreferencesSetupProps> = ({
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
+  const [isVegetarian, setIsVegetarian] = useState<boolean>(false);
+  const [budget, setBudget] = useState<string>('');
 
   const handleCuisineToggle = (cuisine: string) => {
     setSelectedCuisines(prev => 
@@ -40,7 +44,8 @@ const PreferencesSetup: React.FC<PreferencesSetupProps> = ({
 
   const handleSubmit = () => {
     if (selectedCountry && selectedCuisines.length > 0) {
-      onPreferencesSet(selectedCountry, selectedCuisines);
+      const budgetValue = budget ? parseFloat(budget) : undefined;
+      onPreferencesSet(selectedCountry, selectedCuisines, isVegetarian, budgetValue);
     }
   };
 
@@ -105,7 +110,45 @@ const PreferencesSetup: React.FC<PreferencesSetupProps> = ({
             )}
           </div>
 
-          <Button 
+          {/* Vegetarian Mode Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
+            <div className="flex items-center gap-3">
+              <Leaf className="h-5 w-5 text-green-600" />
+              <div>
+                <label className="text-sm font-medium text-primary">
+                  Vegetarian Only
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Filter out all non-vegetarian ingredients
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={isVegetarian}
+              onCheckedChange={setIsVegetarian}
+              className="data-[state=checked]:bg-green-600"
+            />
+          </div>
+
+          {/* Budget Entry */}
+          <div>
+            <label className="text-sm font-medium mb-3 block text-primary flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Weekly Budget (Optional)
+            </label>
+            <Input
+              type="number"
+              placeholder="Enter your weekly grocery budget..."
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              className="border-border hover:border-primary transition-colors"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              We'll help you track spending and suggest budget-friendly alternatives
+            </p>
+          </div>
+
+          <Button
             onClick={handleSubmit}
             disabled={!selectedCountry || selectedCuisines.length === 0}
             className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"

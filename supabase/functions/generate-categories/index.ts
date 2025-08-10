@@ -14,9 +14,11 @@ serve(async (req) => {
   }
 
   try {
-    const { country, cuisines } = await req.json();
+    const { country, cuisines, isVegetarian, budget } = await req.json();
 
-    const prompt = `Generate 6-8 grocery ingredient categories for someone living in ${country} who prefers ${cuisines.join(', ')} cuisine(s).
+    const vegetarianNote = isVegetarian ? ' This person follows a VEGETARIAN diet, so exclude all non-vegetarian categories like meat, fish, poultry, and their derivatives.' : '';
+    
+    const prompt = `Generate 6-8 grocery ingredient categories for someone living in ${country} who prefers ${cuisines.join(', ')} cuisine(s).${vegetarianNote}
 
 Return ONLY a JSON array of category objects with this exact format:
 [
@@ -27,7 +29,7 @@ Return ONLY a JSON array of category objects with this exact format:
   }
 ]
 
-Make categories relevant to ${country} and ${cuisines.join(', ')} cuisine preferences. Include both staples and specialty items for those cuisines.
+Make categories relevant to ${country} and ${cuisines.join(', ')} cuisine preferences. Include both staples and specialty items for those cuisines.${isVegetarian ? ' Focus on vegetarian ingredients only - no meat, fish, or poultry categories.' : ''}
 
 Examples:
 - For Indian: Pulses & Lentils, Spices & Seasonings, Flours & Grains, etc.
@@ -54,6 +56,11 @@ Return ONLY the JSON array, no other text.`;
     });
 
     const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response from OpenAI API');
+    }
+    
     const categoriesText = data.choices[0].message.content;
     
     // Parse the JSON response
