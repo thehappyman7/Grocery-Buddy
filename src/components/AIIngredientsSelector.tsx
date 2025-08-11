@@ -30,10 +30,13 @@ const AIIngredientsSelector: React.FC<AIIngredientsSelectorProps> = ({
     return findIngredientMatches(searchTerm).slice(0, 20);
   }, [searchTerm]);
 
-  // Get ingredients by origin for tabs
-  const indianIngredients = useMemo(() => getIngredientsByOrigin('Indian'), []);
-  const internationalIngredients = useMemo(() => getIngredientsByOrigin('International'), []);
-  const universalIngredients = useMemo(() => getIngredientsByOrigin('Universal'), []);
+  // Get all ingredients from database combined
+  const allDatabaseIngredients = useMemo(() => {
+    const indian = getIngredientsByOrigin('Indian');
+    const international = getIngredientsByOrigin('International');
+    const universal = getIngredientsByOrigin('Universal');
+    return [...indian, ...international, ...universal].sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
 
   const addIngredient = (ingredient: string) => {
     if (!selectedIngredients.includes(ingredient.toLowerCase())) {
@@ -123,14 +126,12 @@ const AIIngredientsSelector: React.FC<AIIngredientsSelectorProps> = ({
 
         {/* Ingredient Sources */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="grocery">
               <ShoppingCart className="h-4 w-4 mr-1" />
               My Groceries
             </TabsTrigger>
-            <TabsTrigger value="indian">Indian</TabsTrigger>
-            <TabsTrigger value="international">International</TabsTrigger>
-            <TabsTrigger value="universal">Universal</TabsTrigger>
+            <TabsTrigger value="database">All Ingredients</TabsTrigger>
           </TabsList>
 
           <TabsContent value="grocery" className="space-y-3">
@@ -167,10 +168,10 @@ const AIIngredientsSelector: React.FC<AIIngredientsSelectorProps> = ({
             )}
           </TabsContent>
 
-          <TabsContent value="indian" className="space-y-3">
-            <h4 className="font-medium text-foreground">Indian Ingredients</h4>
+          <TabsContent value="database" className="space-y-3">
+            <h4 className="font-medium text-foreground">All Available Ingredients ({allDatabaseIngredients.length})</h4>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-              {indianIngredients.map((ingredient, index) => (
+              {allDatabaseIngredients.map((ingredient, index) => (
                 <Button
                   key={index}
                   variant="outline"
@@ -182,51 +183,7 @@ const AIIngredientsSelector: React.FC<AIIngredientsSelectorProps> = ({
                   <Plus className="h-3 w-3 mr-1" />
                   <div className="text-left">
                     <div className="capitalize text-sm">{ingredient.name}</div>
-                    <div className="text-xs text-muted-foreground">{ingredient.category}</div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="international" className="space-y-3">
-            <h4 className="font-medium text-foreground">International Ingredients</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-              {internationalIngredients.map((ingredient, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="justify-start h-auto p-2 hover:bg-primary/10"
-                  onClick={() => addIngredient(ingredient.name)}
-                  disabled={selectedIngredients.includes(ingredient.name.toLowerCase())}
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  <div className="text-left">
-                    <div className="capitalize text-sm">{ingredient.name}</div>
-                    <div className="text-xs text-muted-foreground">{ingredient.category}</div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="universal" className="space-y-3">
-            <h4 className="font-medium text-foreground">Universal Ingredients</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-              {universalIngredients.map((ingredient, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="justify-start h-auto p-2 hover:bg-primary/10"
-                  onClick={() => addIngredient(ingredient.name)}
-                  disabled={selectedIngredients.includes(ingredient.name.toLowerCase())}
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  <div className="text-left">
-                    <div className="capitalize text-sm">{ingredient.name}</div>
-                    <div className="text-xs text-muted-foreground">{ingredient.category}</div>
+                    <div className="text-xs text-muted-foreground">{ingredient.origin} • {ingredient.category}</div>
                   </div>
                 </Button>
               ))}
