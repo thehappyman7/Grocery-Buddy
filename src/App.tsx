@@ -5,8 +5,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { SyncProvider } from "./context/SyncContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ConflictResolutionDialog from "./components/ConflictResolutionDialog";
 
 const queryClient = new QueryClient();
 
@@ -14,15 +16,18 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <SyncProvider>
+          <Toaster />
+          <Sonner />
+          <ConflictResolutionDialog />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SyncProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

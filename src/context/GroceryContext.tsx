@@ -1,6 +1,9 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
+import { useDeviceId } from '@/hooks/useDeviceId';
 
 // Define the grocery item type
 export interface GroceryItem {
@@ -29,6 +32,9 @@ interface GroceryContextType {
 const GroceryContext = createContext<GroceryContextType | undefined>(undefined);
 
 export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
+  const deviceId = useDeviceId();
+  
   // Load items from localStorage on initial render
   const [groceryItems, setGroceryItems] = useState<GroceryItem[]>(() => {
     // Try to get the items from localStorage
@@ -51,7 +57,87 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Save items to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
-  }, [groceryItems]);
+    
+    // Sync to cloud if authenticated and online
+    if (isAuthenticated && user && deviceId && navigator.onLine) {
+      syncToCloud();
+    }
+  }, [groceryItems, isAuthenticated, user, deviceId]);
+
+  // Listen for real-time changes from other devices
+  useEffect(() => {
+    const handleGroceryItemsChanged = () => {
+      loadFromCloud();
+    };
+
+    window.addEventListener('groceryItemsChanged', handleGroceryItemsChanged);
+    return () => window.removeEventListener('groceryItemsChanged', handleGroceryItemsChanged);
+  }, []);
+
+  const syncToCloud = async () => {
+    if (!user || !deviceId) return;
+
+    try {
+      // Simple sync: just ensure all local items exist in cloud
+      for (const item of groceryItems) {
+        const { error } = await supabase
+          .from('grocery_items')
+          .upsert({
+            user_id: user.id,
+            name: item.name,
+            category: item.category,
+            selected: item.selected,
+            quantity: item.quantity || '',
+            local_id: item.id,
+            device_id: deviceId,
+            is_deleted: false
+          }, {
+            onConflict: 'user_id,local_id'
+          });
+
+        if (error) {
+          console.error('Sync error:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Cloud sync failed:', error);
+    }
+  };
+
+  const loadFromCloud = async () => {
+    if (!user || !isAuthenticated) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('grocery_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_deleted', false);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const cloudItems: GroceryItem[] = data.map(item => ({
+          id: item.local_id || parseInt(item.id) || 0,
+          name: item.name,
+          category: item.category,
+          selected: item.selected,
+          quantity: item.quantity || ''
+        }));
+
+        setGroceryItems(cloudItems);
+      }
+    } catch (error) {
+      console.error('Failed to load from cloud:', error);
+    }
+  };
+
+  // Load from cloud when user logs in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadFromCloud();
+    }
+  }, [isAuthenticated, user]);
 
   const toggleItemSelection = (id: number) => {
     setGroceryItems(prevItems =>

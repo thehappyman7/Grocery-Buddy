@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import LoginDialog from './LoginDialog';
 import DarkModeToggle from './DarkModeToggle';
+import SyncIndicator from './SyncIndicator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,7 @@ const Navigation: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-4">
+              <SyncIndicator />
               <DarkModeToggle />
               {!isAuthenticated ? (
                 <Button 
