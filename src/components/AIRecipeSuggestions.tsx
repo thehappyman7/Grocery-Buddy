@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import IngredientButton from '@/components/ui/ingredient-button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Check, X, Clock, Users, ChefHat, Globe, Leaf, ShoppingCart } from 'lucide-react';
 import { findRecipesByIngredients, RecipeWithMatch } from '@/data/recipeDatabase';
@@ -273,9 +274,23 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
                 </div>
               )}
 
-              {/* Add Missing Ingredients Button */}
+              {/* Add Missing Ingredients Actions */}
               {recipe.missingIngredients && recipe.missingIngredients.length > 0 && (
-                <div className="pt-4 border-t border-border">
+                <div className="pt-4 border-t border-border space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {recipe.missingIngredients.map((ingredient, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border">
+                        <span className="text-sm font-medium">{ingredient}</span>
+                        <IngredientButton
+                          variant="add"
+                          itemName={ingredient}
+                          onAction={() => addItem(ingredient, 'Recipe Ingredients')}
+                          size="sm"
+                          showConfirmation={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
@@ -284,14 +299,14 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
                         variant="outline"
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add Missing Ingredients to Cart ({recipe.missingIngredients.length})
+                        Add All Missing Ingredients ({recipe.missingIngredients.length})
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Add Ingredients to Cart</AlertDialogTitle>
+                        <AlertDialogTitle>Add All Ingredients to Cart</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Add these missing ingredients to your grocery list for "{recipe.name}"?
+                          Add all missing ingredients to your grocery list for "{recipe.name}"?
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <div className="max-h-40 overflow-y-auto">
@@ -307,7 +322,7 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
                       <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setPendingIngredients([])}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={() => confirmAddIngredients(recipe)}>
-                          Add to Cart
+                          Add All to Cart
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

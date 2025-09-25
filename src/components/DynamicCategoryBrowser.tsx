@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useGrocery } from '@/context/GroceryContext';
 import { Button } from '@/components/ui/button';
+import IngredientButton from '@/components/ui/ingredient-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Loader2, Settings, Leaf, DollarSign } from 'lucide-react';
+import { Loader2, Settings, Leaf, DollarSign } from 'lucide-react';
 import { ingredientDatabase, findIngredientMatches } from '@/data/ingredientDatabase';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -141,6 +142,10 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
     addItem(itemName, selectedCategory);
   };
 
+  const isItemInCart = (itemName: string) => {
+    return groceryItems.some(item => item.name.toLowerCase() === itemName.toLowerCase());
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -243,14 +248,13 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
                     className="flex items-center justify-between p-4 border-2 border-border bg-muted/30 rounded-xl hover:border-primary/40 hover:shadow-md transition-all duration-200"
                   >
                     <span className="text-sm font-medium">{item}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => handleAddItem(item)}
-                      className="ml-2 bg-primary hover:bg-primary/80 text-primary-foreground border-0 shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add
-                    </Button>
+                    <IngredientButton
+                      variant="add"
+                      itemName={item}
+                      onAction={() => handleAddItem(item)}
+                      disabled={isItemInCart(item)}
+                      showConfirmation={false}
+                    />
                   </div>
                 ))}
               </div>

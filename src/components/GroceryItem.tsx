@@ -3,6 +3,7 @@ import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useGrocery, GroceryItem as GroceryItemType } from '@/context/GroceryContext';
+import IngredientButton from '@/components/ui/ingredient-button';
 import { cn } from '@/lib/utils';
 
 interface GroceryItemProps {
@@ -10,7 +11,7 @@ interface GroceryItemProps {
 }
 
 const GroceryItem: React.FC<GroceryItemProps> = ({ item }) => {
-  const { toggleItemSelection, updateQuantity } = useGrocery();
+  const { toggleItemSelection, updateQuantity, deleteItem } = useGrocery();
 
   return (
     <div 
@@ -38,16 +39,24 @@ const GroceryItem: React.FC<GroceryItemProps> = ({ item }) => {
           {item.category}
         </span>
       </div>
-      <div className="w-24">
-        <Input
-          type="text"
-          placeholder="Qty"
-          value={item.quantity}
-          onChange={(e) => updateQuantity(item.id, e.target.value)}
-          className={cn(
-            "text-center h-8",
-            item.selected ? "border-primary" : "border-border"
-          )}
+      <div className="flex items-center gap-2">
+        <div className="w-24">
+          <Input
+            type="text"
+            placeholder="Qty"
+            value={item.quantity}
+            onChange={(e) => updateQuantity(item.id, e.target.value)}
+            className={cn(
+              "text-center h-8",
+              item.selected ? "border-primary" : "border-border"
+            )}
+          />
+        </div>
+        <IngredientButton
+          variant="delete"
+          itemName={item.name}
+          onAction={() => deleteItem(item.id)}
+          size="sm"
         />
       </div>
     </div>

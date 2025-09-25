@@ -24,6 +24,7 @@ interface GroceryContextType {
   selectedItemsCount: number;
   clearAllSelections: () => void;
   addItem: (name: string, category: string) => void;
+  deleteItem: (id: number) => void;
   allItemsSelected: boolean;
   removeItemsByCategory: (category: string) => void;
   deleteAllItems: () => void;
@@ -166,6 +167,16 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const addItem = (name: string, category: string) => {
+    // Check for duplicates
+    const existingItem = groceryItems.find(item => 
+      item.name.toLowerCase() === name.toLowerCase()
+    );
+    
+    if (existingItem) {
+      toast.info(`${name} is already in your grocery list!`);
+      return;
+    }
+    
     // Allow adding items from any category
     const newId = groceryItems.length > 0 ? Math.max(...groceryItems.map(item => item.id)) + 1 : 1;
     const newItem = {
@@ -195,6 +206,14 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     toast.success(`Removed ${previousCount} item(s) with category "${category}"`);
   };
 
+  const deleteItem = (id: number) => {
+    const item = groceryItems.find(item => item.id === id);
+    if (!item) return;
+    
+    setGroceryItems(prevItems => prevItems.filter(item => item.id !== id));
+    toast.success(`Removed ${item.name} from your grocery list`);
+  };
+
   const deleteAllItems = () => {
     if (groceryItems.length === 0) {
       toast.info('No items to delete');
@@ -218,6 +237,7 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
         selectedItemsCount,
         clearAllSelections,
         addItem,
+        deleteItem,
         allItemsSelected,
         removeItemsByCategory,
         deleteAllItems
