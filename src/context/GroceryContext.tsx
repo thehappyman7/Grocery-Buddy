@@ -132,10 +132,13 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Load from cloud when user logs in
+  // Load from cloud when user logs in, reset when logged out
   useEffect(() => {
     if (isAuthenticated && user) {
       loadFromCloud();
+    } else if (!isAuthenticated) {
+      // Clear grocery items when user logs out
+      setGroceryItems([]);
     }
   }, [isAuthenticated, user]);
 

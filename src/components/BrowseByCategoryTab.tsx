@@ -1,26 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PreferencesSetup from './PreferencesSetup';
 import DynamicCategoryBrowser from './DynamicCategoryBrowser';
 import GroceryList from './GroceryList';
+import { usePreferences } from '@/context/PreferencesContext';
 
 const BrowseByCategoryTab = () => {
-  const [preferences, setPreferences] = useState<{country: string, cuisines: string[], isVegetarian: boolean, budget?: number} | null>(null);
-  const [showPreferences, setShowPreferences] = useState(false);
-
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    const savedPreferences = localStorage.getItem('groceryBuddyPreferences');
-    if (savedPreferences) {
-      setPreferences(JSON.parse(savedPreferences));
-    } else {
-      setShowPreferences(true);
-    }
-  }, []);
+  const { preferences, setPreferences, isPreferencesSet } = usePreferences();
+  const [showPreferences, setShowPreferences] = useState(!isPreferencesSet);
 
   const handlePreferencesSet = (country: string, cuisines: string[], isVegetarian: boolean, budget?: number) => {
     const newPreferences = { country, cuisines, isVegetarian, budget };
     setPreferences(newPreferences);
-    localStorage.setItem('groceryBuddyPreferences', JSON.stringify(newPreferences));
     setShowPreferences(false);
   };
 

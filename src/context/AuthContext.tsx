@@ -67,6 +67,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (event === 'SIGNED_OUT') {
         setUser(null);
+        // Clear all user-specific data from localStorage
+        localStorage.removeItem('groceryItems');
+        localStorage.removeItem('pantryItems');
+        localStorage.removeItem('savedRecipes');
+        localStorage.removeItem('groceryBuddyPreferences');
+        localStorage.removeItem('lastSyncTime');
         toast.info('You have been logged out');
       }
     });
@@ -151,6 +157,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       // Clean up existing auth state before logout
       cleanupAuthState();
+      
+      // Clear all user-specific data from localStorage
+      localStorage.removeItem('groceryItems');
+      localStorage.removeItem('pantryItems');
+      localStorage.removeItem('savedRecipes');
+      localStorage.removeItem('groceryBuddyPreferences');
+      localStorage.removeItem('lastSyncTime');
       
       const { error } = await supabase.auth.signOut();
       

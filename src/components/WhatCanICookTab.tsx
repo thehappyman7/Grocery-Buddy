@@ -1,21 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AIIngredientsSelector from './AIIngredientsSelector';
 import AIRecipeSuggestions from './AIRecipeSuggestions';
 import { useGrocery } from '@/context/GroceryContext';
+import { usePreferences } from '@/context/PreferencesContext';
 
 const WhatCanICookTab: React.FC = () => {
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [isVegetarian, setIsVegetarian] = useState<boolean>(false);
   const { groceryItems } = useGrocery();
-
-  // Load vegetarian preference from localStorage
-  useEffect(() => {
-    const savedPreferences = localStorage.getItem('groceryBuddyPreferences');
-    if (savedPreferences) {
-      const preferences = JSON.parse(savedPreferences);
-      setIsVegetarian(preferences.isVegetarian || false);
-    }
-  }, []);
+  const { preferences } = usePreferences();
+  
+  const isVegetarian = preferences?.isVegetarian || false;
 
   return (
     <div className="space-y-6">

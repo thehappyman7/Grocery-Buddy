@@ -48,10 +48,13 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   }, [preferences, isAuthenticated, user]);
 
-  // Load from cloud when user logs in
+  // Load from cloud when user logs in, reset when logged out
   useEffect(() => {
     if (isAuthenticated && user) {
       loadFromCloud();
+    } else if (!isAuthenticated) {
+      // Clear preferences when user logs out
+      setPreferencesState(null);
     }
   }, [isAuthenticated, user]);
 
@@ -65,7 +68,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
         .upsert({
           user_id: user.id,
           display_name: user.name,
-          preferences: preferences
+          preferences: preferences as any
         }, {
           onConflict: 'user_id'
         });
@@ -93,7 +96,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
       }
 
       if (data?.preferences) {
-        const cloudPreferences = data.preferences as UserPreferences;
+        const cloudPreferences = data.preferences as unknown as UserPreferences;
         setPreferencesState(cloudPreferences);
         localStorage.setItem('groceryBuddyPreferences', JSON.stringify(cloudPreferences));
       }

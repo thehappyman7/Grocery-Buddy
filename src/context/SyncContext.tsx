@@ -199,13 +199,92 @@ export const SyncProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const syncPantryItems = async () => {
-    // Similar logic for pantry items
-    // Implementation would follow the same pattern as grocery items
+    if (!user) return;
+
+    // Get local items
+    const localItems = JSON.parse(localStorage.getItem('pantryItems') || '[]');
+    
+    // Get remote items
+    const { data: remoteItems, error } = await supabase
+      .from('pantry_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_deleted', false);
+
+    if (error) throw error;
+
+    // Simple sync: ensure all local items exist in cloud
+    for (const localItem of localItems) {
+      await supabase.from('pantry_items').upsert({
+        user_id: user.id,
+        name: localItem.name,
+        category: localItem.category,
+        quantity: localItem.quantity || '',
+        expiry_date: localItem.expiryDate || null,
+        device_id: deviceId,
+        is_deleted: false
+      }, {
+        onConflict: 'user_id,name,category'
+      });
+    }
+
+    // Update local storage with remote data if needed
+    if (remoteItems && remoteItems.length > 0) {
+      const cloudItems = remoteItems.map((item, index) => ({
+        id: index + 1,
+        name: item.name,
+        category: item.category,
+        quantity: item.quantity || '',
+        expiryDate: item.expiry_date || undefined
+      }));
+
+      localStorage.setItem('pantryItems', JSON.stringify(cloudItems));
+    }
   };
 
   const syncSavedRecipes = async () => {
-    // Similar logic for saved recipes
-    // Implementation would follow the same pattern as grocery items
+    if (!user) return;
+
+    // Get local items
+    const localItems = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
+    
+    // Get remote items
+    const { data: remoteItems, error } = await supabase
+      .from('saved_recipes')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_deleted', false);
+
+    if (error) throw error;
+
+    // Simple sync: ensure all local items exist in cloud
+    for (const localItem of localItems) {
+      await supabase.from('saved_recipes').upsert({
+        user_id: user.id,
+        recipe_id: localItem.recipeId,
+        recipe_name: localItem.recipeName,
+        recipe_data: localItem.recipeData,
+        is_custom: localItem.isCustom,
+        device_id: deviceId,
+        is_deleted: false
+      }, {
+        onConflict: 'user_id,recipe_id'
+      });
+    }
+
+    // Update local storage with remote data if needed
+    if (remoteItems && remoteItems.length > 0) {
+      const cloudRecipes = remoteItems.map((item, index) => ({
+        id: index + 1,
+        recipeId: item.recipe_id,
+        recipeName: item.recipe_name,
+        recipeData: item.recipe_data,
+        isCustom: item.is_custom,
+        savedAt: item.created_at
+      }));
+
+      localStorage.setItem('savedRecipes', JSON.stringify(cloudRecipes));
+    }
   };
 
   const resolveConflict = async (conflictId: string, resolution: 'local' | 'remote') => {

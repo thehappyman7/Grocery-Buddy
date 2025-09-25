@@ -59,10 +59,13 @@ export const RecipeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => window.removeEventListener('savedRecipesChanged', handleSavedRecipesChanged);
   }, []);
 
-  // Load from cloud when user logs in
+  // Load from cloud when user logs in, reset when logged out
   useEffect(() => {
     if (isAuthenticated && user) {
       loadFromCloud();
+    } else if (!isAuthenticated) {
+      // Clear saved recipes when user logs out
+      setSavedRecipes([]);
     }
   }, [isAuthenticated, user]);
 

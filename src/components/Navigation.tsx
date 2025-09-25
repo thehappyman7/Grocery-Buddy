@@ -57,11 +57,14 @@ const Navigation: React.FC = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 border-grocery-purple/20 shadow-lg" align="end" forceMount>
-                    <DropdownMenuLabel>
+                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user?.name}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user?.email}
+                        </p>
+                        <p className="text-xs text-green-600 leading-none">
+                          ✓ Data synced to Google account
                         </p>
                       </div>
                     </DropdownMenuLabel>
