@@ -33,6 +33,12 @@ serve(async (req) => {
         "difficulty": "Easy/Medium/Hard"
       }
       
+      IMPORTANT: For ingredients, provide ONLY the basic ingredient names without any quantities, units, or preparation details. 
+      Examples: 
+      - Use "chicken" instead of "2 lbs chicken breast, diced"
+      - Use "onion" instead of "1 large onion, chopped"
+      - Use "rice" instead of "2 cups basmati rice, washed"
+      - Use "salt" instead of "1 tsp salt"
       Be thorough with ingredients - include spices, oils, garnishes, everything needed. Use common names for ingredients.`;
     } else {
       prompt = `Analyze this YouTube cooking video URL: "${input}"
@@ -47,6 +53,12 @@ serve(async (req) => {
         "difficulty": "Easy/Medium/Hard"
       }
       
+      IMPORTANT: For ingredients, provide ONLY the basic ingredient names without any quantities, units, or preparation details.
+      Examples: 
+      - Use "chicken" instead of "2 lbs chicken breast, diced"
+      - Use "onion" instead of "1 large onion, chopped"
+      - Use "rice" instead of "2 cups basmati rice, washed"
+      - Use "salt" instead of "1 tsp salt"
       If you cannot access the video content directly, provide a general analysis based on common recipes for the dish mentioned in the video title/description. Be thorough with ingredients.`;
     }
 

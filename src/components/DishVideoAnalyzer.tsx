@@ -60,20 +60,31 @@ const DishVideoAnalyzer: React.FC = () => {
     analyzeDish(videoUrl.trim(), 'video');
   };
 
+  const simplifyIngredientName = (ingredient: string): string => {
+    // Remove quantities, units, and preparation details
+    return ingredient
+      .toLowerCase()
+      .replace(/^\d+(\.\d+)?\s*(cups?|tbsp|tsp|lbs?|oz|grams?|ml|liters?|cloves?|slices?|pieces?|medium|large|small|whole|fresh|dried|chopped|diced|minced|grated|sliced|crushed|ground|cooked|raw|organic|extra|virgin|kosher|sea|black|white|green|red|yellow)\s*/gi, '')
+      .replace(/\s*\([^)]*\)/g, '') // Remove anything in parentheses
+      .replace(/,.*$/, '') // Remove everything after first comma
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim();
+  };
+
   const getMissingIngredients = () => {
     if (!analyzedDish) return [];
     const currentItemNames = groceryItems.map(item => item.name.toLowerCase());
-    return analyzedDish.ingredients.filter(
-      ingredient => !currentItemNames.includes(ingredient.toLowerCase())
-    );
+    return analyzedDish.ingredients
+      .map(simplifyIngredientName)
+      .filter(ingredient => ingredient && !currentItemNames.includes(ingredient.toLowerCase()));
   };
 
   const getAvailableIngredients = () => {
     if (!analyzedDish) return [];
     const currentItemNames = groceryItems.map(item => item.name.toLowerCase());
-    return analyzedDish.ingredients.filter(
-      ingredient => currentItemNames.includes(ingredient.toLowerCase())
-    );
+    return analyzedDish.ingredients
+      .map(simplifyIngredientName)
+      .filter(ingredient => ingredient && currentItemNames.includes(ingredient.toLowerCase()));
   };
 
   const handleAddMissingIngredients = () => {
