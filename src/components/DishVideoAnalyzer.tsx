@@ -38,6 +38,12 @@ const DishVideoAnalyzer: React.FC = () => {
 
       if (error) throw error;
 
+      // Check if the response contains an error message
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
       setAnalyzedDish(data);
       toast.success(`Successfully analyzed ${type === 'dish' ? 'dish' : 'video'}!`);
     } catch (error) {

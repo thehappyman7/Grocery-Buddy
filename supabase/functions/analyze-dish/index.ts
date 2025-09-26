@@ -6,6 +6,60 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to extract video ID from YouTube URL
+function extractVideoId(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname.includes('youtube.com')) {
+      return urlObj.searchParams.get('v');
+    } else if (urlObj.hostname.includes('youtu.be')) {
+      return urlObj.pathname.slice(1);
+    }
+  } catch (e) {
+    console.error('Error parsing URL:', e);
+  }
+  return null;
+}
+
+// Helper function to fetch YouTube video transcript
+async function getVideoTranscript(videoId: string): Promise<string | null> {
+  try {
+    // Try to fetch transcript using YouTube transcript API
+    const transcriptUrl = `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}`;
+    const response = await fetch(transcriptUrl);
+    
+    if (response.ok) {
+      const xmlText = await response.text();
+      // Parse XML and extract text content
+      const textMatches = xmlText.match(/<text[^>]*>([^<]*)<\/text>/g);
+      if (textMatches) {
+        const transcript = textMatches
+          .map(match => match.replace(/<[^>]*>/g, '').trim())
+          .filter(text => text.length > 0)
+          .join(' ');
+        return transcript;
+      }
+    }
+  } catch (error) {
+    console.log('Transcript not available, trying alternative method');
+  }
+
+  // Fallback: try to get video info from oEmbed
+  try {
+    const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+    const response = await fetch(oEmbedUrl);
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.title || null;
+    }
+  } catch (error) {
+    console.log('oEmbed also failed');
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -21,6 +75,7 @@ serve(async (req) => {
     }
 
     let prompt = '';
+    let videoContent = '';
     
     if (type === 'dish') {
       prompt = `Analyze the dish "${input}" and provide a detailed breakdown in JSON format:
@@ -41,34 +96,52 @@ serve(async (req) => {
       - Use "salt" instead of "1 tsp salt"
       Be thorough with ingredients - include spices, oils, garnishes, everything needed. Use common names for ingredients.`;
     } else {
-      // Extract any useful information from the URL
-      let dishHint = '';
-      try {
-        const url = new URL(input);
-        if (url.hostname.includes('youtube') || url.hostname.includes('youtu.be')) {
-          // Try to extract dish name from URL parameters or path
-          const urlParams = new URLSearchParams(url.search);
-          const videoId = urlParams.get('v') || url.pathname.split('/').pop();
-          dishHint = `This appears to be a YouTube cooking video with ID: ${videoId}`;
-        }
-      } catch (e) {
-        // Invalid URL format
+      // Extract video ID and get transcript/content
+      const videoId = extractVideoId(input);
+      
+      if (!videoId) {
+        return new Response(JSON.stringify({
+          error: "Could not extract ingredients from this video. Please try another recipe.",
+          name: "Analysis Failed",
+          ingredients: [],
+          instructions: [],
+          servings: 1,
+          cookingTime: 0,
+          difficulty: "Unknown"
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      prompt = `Analyze this YouTube cooking video URL: "${input}"
+      console.log('Fetching transcript for video ID:', videoId);
+      const transcriptResult = await getVideoTranscript(videoId);
+
+      if (!transcriptResult) {
+        return new Response(JSON.stringify({
+          error: "Could not extract ingredients from this video. Please try another recipe.",
+          name: "Analysis Failed",
+          ingredients: [],
+          instructions: [],
+          servings: 1,
+          cookingTime: 0,
+          difficulty: "Unknown"
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      videoContent = transcriptResult;
+      console.log('Video content found:', videoContent.substring(0, 200) + '...');
+
+      prompt = `Analyze this cooking video content and extract ingredient information: "${videoContent}"
       
-      ${dishHint}
-      
-      I understand you cannot directly access YouTube videos. Instead, please:
-      1. Look at the URL for any clues about the dish name
-      2. If you can identify the dish type from the URL or if it's a common cooking video format, provide a comprehensive ingredient list for that dish
-      3. Make your best educated guess based on popular recipes for the identified dish
-      
-      Provide the analysis in JSON format:
+      Based on the video transcript/title above, provide a detailed breakdown in JSON format:
       {
-        "name": "Best guess recipe name based on URL analysis",
-        "ingredients": ["comprehensive", "list", "of", "typical", "ingredients"],
-        "instructions": ["general step 1", "general step 2", "general step 3"],
+        "name": "Recipe name from the video content",
+        "ingredients": ["list", "of", "all", "ingredients", "mentioned"],
+        "instructions": ["step 1", "step 2", "step 3", "etc"],
         "servings": number,
         "cookingTime": number (in minutes),
         "difficulty": "Easy/Medium/Hard"
@@ -81,7 +154,7 @@ serve(async (req) => {
       - Use "rice" instead of "2 cups basmati rice, washed"
       - Use "salt" instead of "1 tsp salt"
       
-      Be thorough with ingredients - include spices, oils, garnishes, and everything typically needed for the dish. If you cannot determine the dish from the URL, provide a template response asking for more information.`;
+      Be thorough with ingredients - include spices, oils, garnishes, and everything typically needed for the dish.`;
     }
 
     console.log('Making request to Gemini API for:', type, input);
