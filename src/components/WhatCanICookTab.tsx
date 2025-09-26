@@ -3,6 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AIIngredientsSelector from './AIIngredientsSelector';
 import AIRecipeSuggestions from './AIRecipeSuggestions';
 import DishAnalyzer from './DishAnalyzer';
+import QuickMealsTab from './QuickMealsTab';
+import TrendingRecipesTab from './TrendingRecipesTab';
+import SeasonalSpecialsTab from './SeasonalSpecialsTab';
 import { useGrocery } from '@/context/GroceryContext';
 import { usePreferences } from '@/context/PreferencesContext';
 import { ShoppingCart, ChefHat } from 'lucide-react';
@@ -24,13 +27,25 @@ const WhatCanICookTab: React.FC = () => {
       </div>
       
       <Tabs defaultValue="ingredients" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="ingredients" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            Ingredients Mode
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="ingredients" className="flex items-center gap-1 text-xs">
+            <ShoppingCart className="h-3 w-3" />
+            My Ingredients
           </TabsTrigger>
-          <TabsTrigger value="dish" className="flex items-center gap-2">
-            <ChefHat className="h-4 w-4" />
+          <TabsTrigger value="quick" className="flex items-center gap-1 text-xs">
+            ⚡
+            Quick Meals
+          </TabsTrigger>
+          <TabsTrigger value="trending" className="flex items-center gap-1 text-xs">
+            🔥
+            Trending
+          </TabsTrigger>
+          <TabsTrigger value="seasonal" className="flex items-center gap-1 text-xs">
+            🌿
+            Seasonal
+          </TabsTrigger>
+          <TabsTrigger value="dish" className="flex items-center gap-1 text-xs">
+            <ChefHat className="h-3 w-3" />
             Dish Mode
           </TabsTrigger>
         </TabsList>
@@ -56,6 +71,18 @@ const WhatCanICookTab: React.FC = () => {
             selectedIngredients={selectedIngredients} 
             isVegetarian={isVegetarian}
           />
+        </TabsContent>
+        
+        <TabsContent value="quick" className="space-y-6 mt-6">
+          <QuickMealsTab />
+        </TabsContent>
+        
+        <TabsContent value="trending" className="space-y-6 mt-6">
+          <TrendingRecipesTab />
+        </TabsContent>
+        
+        <TabsContent value="seasonal" className="space-y-6 mt-6">
+          <SeasonalSpecialsTab />
         </TabsContent>
         
         <TabsContent value="dish" className="space-y-6 mt-6">
