@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AIIngredientsSelector from './AIIngredientsSelector';
 import AIRecipeSuggestions from './AIRecipeSuggestions';
-import DishVideoAnalyzer from './DishVideoAnalyzer';
+import DishAnalyzer from './DishAnalyzer';
 import { useGrocery } from '@/context/GroceryContext';
 import { usePreferences } from '@/context/PreferencesContext';
 import { ShoppingCart, ChefHat } from 'lucide-react';
@@ -19,7 +19,7 @@ const WhatCanICookTab: React.FC = () => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">AI Chef Mode</h2>
         <p className="text-muted-foreground">
-          Build recipes from your ingredients or analyze dishes and videos for complete ingredient lists
+          Build recipes from your ingredients or analyze dishes for complete ingredient lists
         </p>
       </div>
       
@@ -31,7 +31,7 @@ const WhatCanICookTab: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger value="dish" className="flex items-center gap-2">
             <ChefHat className="h-4 w-4" />
-            Dish/Video Mode
+            Dish Mode
           </TabsTrigger>
         </TabsList>
         
@@ -61,11 +61,11 @@ const WhatCanICookTab: React.FC = () => {
         <TabsContent value="dish" className="space-y-6 mt-6">
           <div className="text-center">
             <p className="text-muted-foreground">
-              Enter a dish name or YouTube cooking video to extract ingredients and recipes
+              Enter a dish name to extract ingredients and recipes
             </p>
           </div>
           
-          <DishVideoAnalyzer />
+          <DishAnalyzer />
         </TabsContent>
       </Tabs>
     </div>

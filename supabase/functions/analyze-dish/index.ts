@@ -6,60 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to extract video ID from YouTube URL
-function extractVideoId(url: string): string | null {
-  try {
-    const urlObj = new URL(url);
-    if (urlObj.hostname.includes('youtube.com')) {
-      return urlObj.searchParams.get('v');
-    } else if (urlObj.hostname.includes('youtu.be')) {
-      return urlObj.pathname.slice(1);
-    }
-  } catch (e) {
-    console.error('Error parsing URL:', e);
-  }
-  return null;
-}
-
-// Helper function to fetch YouTube video transcript
-async function getVideoTranscript(videoId: string): Promise<string | null> {
-  try {
-    // Try to fetch transcript using YouTube transcript API
-    const transcriptUrl = `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}`;
-    const response = await fetch(transcriptUrl);
-    
-    if (response.ok) {
-      const xmlText = await response.text();
-      // Parse XML and extract text content
-      const textMatches = xmlText.match(/<text[^>]*>([^<]*)<\/text>/g);
-      if (textMatches) {
-        const transcript = textMatches
-          .map(match => match.replace(/<[^>]*>/g, '').trim())
-          .filter(text => text.length > 0)
-          .join(' ');
-        return transcript;
-      }
-    }
-  } catch (error) {
-    console.log('Transcript not available, trying alternative method');
-  }
-
-  // Fallback: try to get video info from oEmbed
-  try {
-    const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
-    const response = await fetch(oEmbedUrl);
-    
-    if (response.ok) {
-      const data = await response.json();
-      return data.title || null;
-    }
-  } catch (error) {
-    console.log('oEmbed also failed');
-  }
-
-  return null;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -74,90 +20,41 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    let prompt = '';
-    let videoContent = '';
-    
-    if (type === 'dish') {
-      prompt = `Analyze the dish "${input}" and provide a detailed breakdown in JSON format:
-      {
-        "name": "Exact dish name",
-        "ingredients": ["list", "of", "all", "ingredients", "needed"],
-        "instructions": ["step 1", "step 2", "step 3", "etc"],
-        "servings": number,
-        "cookingTime": number (in minutes),
-        "difficulty": "Easy/Medium/Hard"
-      }
-      
-      IMPORTANT: For ingredients, provide ONLY the basic ingredient names without any quantities, units, or preparation details. 
-      Examples: 
-      - Use "chicken" instead of "2 lbs chicken breast, diced"
-      - Use "onion" instead of "1 large onion, chopped"
-      - Use "rice" instead of "2 cups basmati rice, washed"
-      - Use "salt" instead of "1 tsp salt"
-      Be thorough with ingredients - include spices, oils, garnishes, everything needed. Use common names for ingredients.`;
-    } else {
-      // Extract video ID and get transcript/content
-      const videoId = extractVideoId(input);
-      
-      if (!videoId) {
-        return new Response(JSON.stringify({
-          error: "Could not extract ingredients from this video. Please try another recipe.",
-          name: "Analysis Failed",
-          ingredients: [],
-          instructions: [],
-          servings: 1,
-          cookingTime: 0,
-          difficulty: "Unknown"
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      console.log('Fetching transcript for video ID:', videoId);
-      const transcriptResult = await getVideoTranscript(videoId);
-
-      if (!transcriptResult) {
-        return new Response(JSON.stringify({
-          error: "Could not extract ingredients from this video. Please try another recipe.",
-          name: "Analysis Failed",
-          ingredients: [],
-          instructions: [],
-          servings: 1,
-          cookingTime: 0,
-          difficulty: "Unknown"
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      videoContent = transcriptResult;
-      console.log('Video content found:', videoContent.substring(0, 200) + '...');
-
-      prompt = `Analyze this cooking video content and extract ingredient information: "${videoContent}"
-      
-      Based on the video transcript/title above, provide a detailed breakdown in JSON format:
-      {
-        "name": "Recipe name from the video content",
-        "ingredients": ["list", "of", "all", "ingredients", "mentioned"],
-        "instructions": ["step 1", "step 2", "step 3", "etc"],
-        "servings": number,
-        "cookingTime": number (in minutes),
-        "difficulty": "Easy/Medium/Hard"
-      }
-      
-      IMPORTANT: For ingredients, provide ONLY the basic ingredient names without any quantities, units, or preparation details.
-      Examples: 
-      - Use "chicken" instead of "2 lbs chicken breast, diced"
-      - Use "onion" instead of "1 large onion, chopped"
-      - Use "rice" instead of "2 cups basmati rice, washed"
-      - Use "salt" instead of "1 tsp salt"
-      
-      Be thorough with ingredients - include spices, oils, garnishes, and everything typically needed for the dish.`;
+    // Only handle dish analysis now
+    if (type !== 'dish') {
+      return new Response(JSON.stringify({
+        error: "Only dish analysis is supported",
+        name: "Analysis Failed",
+        ingredients: [],
+        instructions: [],
+        servings: 1,
+        cookingTime: 0,
+        difficulty: "Unknown"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log('Making request to Gemini API for:', type, input);
+    const prompt = `Analyze the dish "${input}" and provide a detailed breakdown in JSON format:
+    {
+      "name": "Exact dish name",
+      "ingredients": ["list", "of", "all", "ingredients", "needed"],
+      "instructions": ["step 1", "step 2", "step 3", "etc"],
+      "servings": number,
+      "cookingTime": number (in minutes),
+      "difficulty": "Easy/Medium/Hard"
+    }
+    
+    IMPORTANT: For ingredients, provide ONLY the basic ingredient names without any quantities, units, or preparation details. 
+    Examples: 
+    - Use "chicken" instead of "2 lbs chicken breast, diced"
+    - Use "onion" instead of "1 large onion, chopped"
+    - Use "rice" instead of "2 cups basmati rice, washed"
+    - Use "salt" instead of "1 tsp salt"
+    Be thorough with ingredients - include spices, oils, garnishes, everything needed. Use common names for ingredients.`;
+
+    console.log('Making request to Gemini API for dish:', input);
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -208,7 +105,7 @@ serve(async (req) => {
       analysisResult = {
         name: input,
         ingredients: ["Unable to parse ingredients", "Please try again"],
-        instructions: ["Analysis failed", "Please try a different dish or video"],
+        instructions: ["Analysis failed", "Please try a different dish"],
         servings: 2,
         cookingTime: 30,
         difficulty: "Medium"
