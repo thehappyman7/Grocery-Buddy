@@ -41,13 +41,34 @@ serve(async (req) => {
       - Use "salt" instead of "1 tsp salt"
       Be thorough with ingredients - include spices, oils, garnishes, everything needed. Use common names for ingredients.`;
     } else {
+      // Extract any useful information from the URL
+      let dishHint = '';
+      try {
+        const url = new URL(input);
+        if (url.hostname.includes('youtube') || url.hostname.includes('youtu.be')) {
+          // Try to extract dish name from URL parameters or path
+          const urlParams = new URLSearchParams(url.search);
+          const videoId = urlParams.get('v') || url.pathname.split('/').pop();
+          dishHint = `This appears to be a YouTube cooking video with ID: ${videoId}`;
+        }
+      } catch (e) {
+        // Invalid URL format
+      }
+
       prompt = `Analyze this YouTube cooking video URL: "${input}"
       
-      Extract the recipe information and provide a detailed breakdown in JSON format:
+      ${dishHint}
+      
+      I understand you cannot directly access YouTube videos. Instead, please:
+      1. Look at the URL for any clues about the dish name
+      2. If you can identify the dish type from the URL or if it's a common cooking video format, provide a comprehensive ingredient list for that dish
+      3. Make your best educated guess based on popular recipes for the identified dish
+      
+      Provide the analysis in JSON format:
       {
-        "name": "Recipe name from video",
-        "ingredients": ["list", "of", "all", "ingredients", "shown"],
-        "instructions": ["step 1", "step 2", "step 3", "etc"],
+        "name": "Best guess recipe name based on URL analysis",
+        "ingredients": ["comprehensive", "list", "of", "typical", "ingredients"],
+        "instructions": ["general step 1", "general step 2", "general step 3"],
         "servings": number,
         "cookingTime": number (in minutes),
         "difficulty": "Easy/Medium/Hard"
@@ -59,7 +80,8 @@ serve(async (req) => {
       - Use "onion" instead of "1 large onion, chopped"
       - Use "rice" instead of "2 cups basmati rice, washed"
       - Use "salt" instead of "1 tsp salt"
-      If you cannot access the video content directly, provide a general analysis based on common recipes for the dish mentioned in the video title/description. Be thorough with ingredients.`;
+      
+      Be thorough with ingredients - include spices, oils, garnishes, and everything typically needed for the dish. If you cannot determine the dish from the URL, provide a template response asking for more information.`;
     }
 
     console.log('Making request to Gemini API for:', type, input);
