@@ -2,7 +2,8 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useGrocery } from '@/context/GroceryContext';
-import { ShoppingCart, Trash2 } from 'lucide-react';
+import { ShoppingCart, Trash2, TestTube } from 'lucide-react';
+import { testGeminiConnection } from '@/utils/testGemini';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,17 @@ const Header: React.FC = () => {
               {selectedItemsCount} selected
             </span>
           )}
+          
+          {/* Temporary Test Button */}
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={testGeminiConnection}
+            className="flex items-center gap-2"
+          >
+            <TestTube className="h-4 w-4" /> Test Gemini
+          </Button>
+          
           <Button 
             variant="outline" 
             size="sm" 
