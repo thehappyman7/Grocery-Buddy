@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { recipeDatabase, Recipe } from '@/data/recipeDatabase';
+import React, { useState, useEffect } from 'react';
+import { Recipe } from '@/data/recipeDatabase';
 import RecipeCard from './RecipeCard';
 import RecipeFilters, { RecipeFilters as Filters } from './RecipeFilters';
 import RecipeDrawer from './RecipeDrawer';
 import { usePreferences } from '@/context/PreferencesContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const QuickMealsTab: React.FC = () => {
   const { preferences } = usePreferences();
@@ -14,29 +16,35 @@ const QuickMealsTab: React.FC = () => {
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [quickMeals, setQuickMeals] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Helper function to check if a recipe is vegetarian
-  const isRecipeVegetarian = (recipe: Recipe) => {
-    const nonVegIngredients = ['chicken', 'beef', 'pork', 'fish', 'mutton', 'lamb', 'meat', 'anchovy'];
-    const nonVegTags = ['non-vegetarian', 'meat', 'fish', 'poultry'];
-    
-    const hasNonVegIngredients = recipe.ingredients.some(ingredient =>
-      nonVegIngredients.some(nonVeg => ingredient.toLowerCase().includes(nonVeg))
-    );
-    
-    const hasNonVegTags = recipe.tags.some(tag =>
-      nonVegTags.some(nonVeg => tag.toLowerCase().includes(nonVeg))
-    );
-    
-    return !hasNonVegIngredients && !hasNonVegTags;
+  // Fetch quick meals from Gemini API
+  const fetchQuickMeals = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-recipes', {
+        body: {
+          type: 'quick',
+          filters: filters
+        }
+      });
+
+      if (error) throw error;
+      
+      setQuickMeals(data.recipes || []);
+    } catch (error) {
+      console.error('Error fetching quick meals:', error);
+      toast.error('Failed to load quick meals. Please try again.');
+      setQuickMeals([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Filter recipes for quick meals (under 30 minutes)
-  const quickMeals = recipeDatabase
-    .filter(recipe => recipe.cookingTime <= 30)
-    .filter(recipe => !filters.isVegetarian || isRecipeVegetarian(recipe))
-    .filter(recipe => filters.cuisine === 'all' || recipe.cuisine === filters.cuisine)
-    .sort((a, b) => a.cookingTime - b.cookingTime);
+  useEffect(() => {
+    fetchQuickMeals();
+  }, [filters]);
 
   const handleViewDetails = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
@@ -62,10 +70,20 @@ const QuickMealsTab: React.FC = () => {
 
       <RecipeFilters filters={filters} onFiltersChange={setFilters} />
 
-      {quickMeals.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-lg border p-4 animate-pulse">
+              <div className="bg-muted h-32 rounded mb-4"></div>
+              <div className="bg-muted h-4 rounded mb-2"></div>
+              <div className="bg-muted h-3 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      ) : quickMeals.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            No quick meals found with your current filters. Try adjusting your preferences.
+            No quick meals found. Please try again or adjust your filters.
           </p>
         </div>
       ) : (

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { recipeDatabase, Recipe } from '@/data/recipeDatabase';
+import React, { useState, useEffect } from 'react';
+import { Recipe } from '@/data/recipeDatabase';
 import RecipeCard from './RecipeCard';
 import RecipeFilters, { RecipeFilters as Filters } from './RecipeFilters';
 import RecipeDrawer from './RecipeDrawer';
 import { usePreferences } from '@/context/PreferencesContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const TrendingRecipesTab: React.FC = () => {
   const { preferences } = usePreferences();
@@ -14,55 +16,35 @@ const TrendingRecipesTab: React.FC = () => {
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [trendingRecipes, setTrendingRecipes] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Helper function to check if a recipe is vegetarian
-  const isRecipeVegetarian = (recipe: Recipe) => {
-    const nonVegIngredients = ['chicken', 'beef', 'pork', 'fish', 'mutton', 'lamb', 'meat', 'anchovy'];
-    const nonVegTags = ['non-vegetarian', 'meat', 'fish', 'poultry'];
-    
-    const hasNonVegIngredients = recipe.ingredients.some(ingredient =>
-      nonVegIngredients.some(nonVeg => ingredient.toLowerCase().includes(nonVeg))
-    );
-    
-    const hasNonVegTags = recipe.tags.some(tag =>
-      nonVegTags.some(nonVeg => tag.toLowerCase().includes(nonVeg))
-    );
-    
-    return !hasNonVegIngredients && !hasNonVegTags;
+  // Fetch trending recipes from Gemini API
+  const fetchTrendingRecipes = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-recipes', {
+        body: {
+          type: 'trending',
+          filters: filters
+        }
+      });
+
+      if (error) throw error;
+      
+      setTrendingRecipes(data.recipes || []);
+    } catch (error) {
+      console.error('Error fetching trending recipes:', error);
+      toast.error('Failed to load trending recipes. Please try again.');
+      setTrendingRecipes([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Helper function to calculate popularity score
-  const getPopularityScore = (recipe: Recipe) => {
-    // Simulate popularity based on tags, difficulty, and cooking time
-    let score = 0;
-    
-    // Popular tags add to score
-    const popularTags = ['quick', 'comfort food', 'popular', 'breakfast', 'restaurant style'];
-    score += recipe.tags.filter(tag => popularTags.includes(tag)).length * 10;
-    
-    // Easy recipes are more popular
-    if (recipe.difficulty === 'Easy') score += 15;
-    if (recipe.difficulty === 'Medium') score += 10;
-    
-    // Quick recipes are trendy
-    if (recipe.cookingTime <= 30) score += 10;
-    
-    // Indian cuisine bonus (popular in our database)
-    if (recipe.cuisine === 'Indian') score += 5;
-    
-    // Add some randomness for variety
-    score += Math.random() * 10;
-    
-    return score;
-  };
-
-  // Filter and sort trending recipes
-  const trendingRecipes = recipeDatabase
-    .filter(recipe => !filters.isVegetarian || isRecipeVegetarian(recipe))
-    .filter(recipe => filters.cuisine === 'all' || recipe.cuisine === filters.cuisine)
-    .map(recipe => ({ ...recipe, popularityScore: getPopularityScore(recipe) }))
-    .sort((a, b) => b.popularityScore - a.popularityScore)
-    .slice(0, 12); // Show top 12 trending recipes
+  useEffect(() => {
+    fetchTrendingRecipes();
+  }, [filters]);
 
   const handleViewDetails = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
@@ -89,10 +71,20 @@ const TrendingRecipesTab: React.FC = () => {
 
       <RecipeFilters filters={filters} onFiltersChange={setFilters} />
 
-      {trendingRecipes.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-lg border p-4 animate-pulse">
+              <div className="bg-muted h-32 rounded mb-4"></div>
+              <div className="bg-muted h-4 rounded mb-2"></div>
+              <div className="bg-muted h-3 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      ) : trendingRecipes.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            No trending recipes found with your current filters. Try adjusting your preferences.
+            No trending recipes found. Please try again or adjust your filters.
           </p>
         </div>
       ) : (

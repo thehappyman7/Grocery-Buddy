@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { recipeDatabase, Recipe } from '@/data/recipeDatabase';
+import React, { useState, useEffect } from 'react';
+import { Recipe } from '@/data/recipeDatabase';
 import RecipeCard from './RecipeCard';
 import RecipeFilters, { RecipeFilters as Filters } from './RecipeFilters';
 import RecipeDrawer from './RecipeDrawer';
 import { usePreferences } from '@/context/PreferencesContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const SeasonalSpecialsTab: React.FC = () => {
   const { preferences } = usePreferences();
@@ -14,22 +16,8 @@ const SeasonalSpecialsTab: React.FC = () => {
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // Helper function to check if a recipe is vegetarian
-  const isRecipeVegetarian = (recipe: Recipe) => {
-    const nonVegIngredients = ['chicken', 'beef', 'pork', 'fish', 'mutton', 'lamb', 'meat', 'anchovy'];
-    const nonVegTags = ['non-vegetarian', 'meat', 'fish', 'poultry'];
-    
-    const hasNonVegIngredients = recipe.ingredients.some(ingredient =>
-      nonVegIngredients.some(nonVeg => ingredient.toLowerCase().includes(nonVeg))
-    );
-    
-    const hasNonVegTags = recipe.tags.some(tag =>
-      nonVegTags.some(nonVeg => tag.toLowerCase().includes(nonVeg))
-    );
-    
-    return !hasNonVegIngredients && !hasNonVegTags;
-  };
+  const [seasonalRecipes, setSeasonalRecipes] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get current season
   const getCurrentSeason = () => {
@@ -42,46 +30,32 @@ const SeasonalSpecialsTab: React.FC = () => {
 
   const currentSeason = getCurrentSeason();
 
-  // Helper function to check if recipe is seasonal
-  const isSeasonalRecipe = (recipe: Recipe) => {
-    const seasonalIngredients = {
-      spring: ['spinach', 'peas', 'green chili', 'curry leaves', 'fenugreek leaves'],
-      summer: ['tomatoes', 'cucumbers', 'yogurt', 'coconut', 'lemon', 'mint'],
-      autumn: ['potatoes', 'cauliflower', 'onions', 'garlic', 'ginger'],
-      winter: ['carrots', 'cabbage', 'garam masala', 'ghee', 'milk']
-    };
+  // Fetch seasonal recipes from Gemini API
+  const fetchSeasonalRecipes = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-recipes', {
+        body: {
+          type: 'seasonal',
+          filters: filters
+        }
+      });
 
-    const seasonalTags = {
-      spring: ['fresh', 'green', 'light'],
-      summer: ['cooling', 'fresh', 'salad', 'yogurt'],
-      autumn: ['comfort food', 'spicy', 'warming'],
-      winter: ['rich', 'warming', 'comfort food', 'creamy']
-    };
-
-    const currentSeasonIngredients = seasonalIngredients[currentSeason] || [];
-    const currentSeasonTags = seasonalTags[currentSeason] || [];
-
-    const hasSeasonalIngredients = recipe.ingredients.some(ingredient =>
-      currentSeasonIngredients.some(seasonal => ingredient.toLowerCase().includes(seasonal))
-    );
-
-    const hasSeasonalTags = recipe.tags.some(tag =>
-      currentSeasonTags.some(seasonal => tag.toLowerCase().includes(seasonal))
-    );
-
-    return hasSeasonalIngredients || hasSeasonalTags;
+      if (error) throw error;
+      
+      setSeasonalRecipes(data.recipes || []);
+    } catch (error) {
+      console.error('Error fetching seasonal recipes:', error);
+      toast.error('Failed to load seasonal recipes. Please try again.');
+      setSeasonalRecipes([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Filter seasonal recipes
-  const seasonalRecipes = recipeDatabase
-    .filter(recipe => isSeasonalRecipe(recipe))
-    .filter(recipe => !filters.isVegetarian || isRecipeVegetarian(recipe))
-    .filter(recipe => filters.cuisine === 'all' || recipe.cuisine === filters.cuisine)
-    .sort((a, b) => {
-      // Prioritize by season relevance, then by difficulty
-      const difficultyOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 };
-      return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
-    });
+  useEffect(() => {
+    fetchSeasonalRecipes();
+  }, [filters]);
 
   const handleViewDetails = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
@@ -115,10 +89,20 @@ const SeasonalSpecialsTab: React.FC = () => {
 
       <RecipeFilters filters={filters} onFiltersChange={setFilters} />
 
-      {seasonalRecipes.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-lg border p-4 animate-pulse">
+              <div className="bg-muted h-32 rounded mb-4"></div>
+              <div className="bg-muted h-4 rounded mb-2"></div>
+              <div className="bg-muted h-3 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      ) : seasonalRecipes.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            No seasonal recipes found with your current filters. Try adjusting your preferences.
+            No seasonal recipes found. Please try again or adjust your filters.
           </p>
         </div>
       ) : (
