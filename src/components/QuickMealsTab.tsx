@@ -4,11 +4,13 @@ import RecipeCard from './RecipeCard';
 import RecipeFilters, { RecipeFilters as Filters } from './RecipeFilters';
 import RecipeDrawer from './RecipeDrawer';
 import { usePreferences } from '@/context/PreferencesContext';
+import { useGrocery } from '@/context/GroceryContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const QuickMealsTab: React.FC = () => {
   const { preferences } = usePreferences();
+  const { groceryItems } = useGrocery();
   const [filters, setFilters] = useState<Filters>({
     isVegetarian: preferences?.isVegetarian || false,
     cuisine: 'all',
@@ -23,10 +25,13 @@ const QuickMealsTab: React.FC = () => {
   const fetchQuickMeals = async () => {
     setIsLoading(true);
     try {
+      const userIngredients = groceryItems.map(item => item.name);
+      
       const { data, error } = await supabase.functions.invoke('generate-recipes', {
         body: {
           type: 'quick',
-          filters: filters
+          filters: filters,
+          userIngredients: userIngredients
         }
       });
 
@@ -44,7 +49,7 @@ const QuickMealsTab: React.FC = () => {
 
   useEffect(() => {
     fetchQuickMeals();
-  }, [filters]);
+  }, [filters, groceryItems]);
 
   const handleViewDetails = (recipe: Recipe) => {
     setSelectedRecipe(recipe);

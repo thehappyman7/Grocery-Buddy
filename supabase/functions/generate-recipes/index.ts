@@ -14,6 +14,8 @@ interface RecipeRequest {
     budget: number;
   };
   category?: string;
+  userIngredients?: string[];
+  excludeRecipeIds?: string[];
 }
 
 serve(async (req) => {
@@ -22,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type, filters, category }: RecipeRequest = await req.json();
+    const { type, filters, category, userIngredients = [], excludeRecipeIds = [] }: RecipeRequest = await req.json();
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     if (!lovableApiKey) {
@@ -37,15 +39,19 @@ serve(async (req) => {
     const currentMonth = new Date().toLocaleString('default', { month: 'long' });
     const currentSeason = getCurrentSeason();
 
+    const userIngredientsClause = userIngredients.length > 0 
+      ? `Prioritize recipes using these available ingredients: ${userIngredients.join(', ')}. If not enough ingredients for a complete recipe, suggest recipes requiring minimal extra ingredients beyond this list.`
+      : '';
+    
     switch (type) {
       case 'quick':
-        prompt = `Give me 5 quick recipes that can be prepared under 20 minutes for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
+        prompt = `Give me 5 quick recipes that can be prepared under 20 minutes for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} List only ingredient names (no measurements).`;
         break;
       case 'trending':
-        prompt = `Give me 5 currently trending grocery recipes for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
+        prompt = `Give me 5 currently trending grocery recipes for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} List only ingredient names (no measurements).`;
         break;
       case 'seasonal':
-        prompt = `Give me 5 seasonal recipes based on currently available vegetables and fruits for ${currentMonth} (${currentSeason} season), ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
+        prompt = `Give me 5 seasonal recipes based on currently available vegetables and fruits for ${currentMonth} (${currentSeason} season), ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} List only ingredient names (no measurements).`;
         break;
       case 'category':
         prompt = `Give me 5 recipes in the category "${category}" for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
@@ -106,7 +112,13 @@ serve(async (req) => {
         });
     }
 
-    prompt += `
+    const ingredientMatchClause = userIngredients.length > 0 
+      ? `For each recipe, also include:
+- "matchedIngredients": number (count how many of the user's ingredients [${userIngredients.join(', ')}] are used in this recipe)
+- "extraIngredientsNeeded": number (count how many additional ingredients beyond the user's list are needed)`
+      : '';
+
+prompt += `
 
 Return a JSON array of exactly 5 recipe objects with this structure:
 {
@@ -118,7 +130,7 @@ Return a JSON array of exactly 5 recipe objects with this structure:
   "image": "https://source.unsplash.com/400x300/?food,recipe-name",
   "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
   "instructions": ["step1", "step2", "step3"],
-  "tags": ["tag1", "tag2", "tag3"]
+  "tags": ["tag1", "tag2", "tag3"]${userIngredients.length > 0 ? ',\n  "matchedIngredients": 0,\n  "extraIngredientsNeeded": 0' : ''}
 }
 
 Make sure:
@@ -129,6 +141,7 @@ Make sure:
 - Images use realistic food keywords
 - Tags describe the dish characteristics
 - All recipes are practical and achievable
+${ingredientMatchClause}
 
 Return only the JSON array, no other text.`;
 

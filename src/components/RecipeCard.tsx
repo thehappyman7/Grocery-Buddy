@@ -8,7 +8,10 @@ import { useGrocery } from '@/context/GroceryContext';
 import { toast } from 'sonner';
 
 interface RecipeCardProps {
-  recipe: Recipe;
+  recipe: Recipe & {
+    matchedIngredients?: number;
+    extraIngredientsNeeded?: number;
+  };
   badgeText?: string;
   badgeIcon?: string;
   onViewDetails: (recipe: Recipe) => void;
@@ -63,11 +66,23 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, badgeText, badgeIcon, o
           <CardTitle className="text-lg leading-tight line-clamp-2" onClick={() => onViewDetails(recipe)}>
             {recipe.name}
           </CardTitle>
-          {badgeText && (
-            <Badge variant="secondary" className="shrink-0 text-xs">
-              {badgeIcon} {badgeText}
-            </Badge>
-          )}
+          <div className="flex flex-col gap-1 shrink-0">
+            {badgeText && (
+              <Badge variant="secondary" className="text-xs">
+                {badgeIcon} {badgeText}
+              </Badge>
+            )}
+            {recipe.matchedIngredients !== undefined && recipe.matchedIngredients > 0 && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800 text-xs">
+                ✓ {recipe.matchedIngredients} matched
+              </Badge>
+            )}
+            {recipe.extraIngredientsNeeded !== undefined && recipe.extraIngredientsNeeded > 0 && (
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800 text-xs">
+                +{recipe.extraIngredientsNeeded} extra
+              </Badge>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
