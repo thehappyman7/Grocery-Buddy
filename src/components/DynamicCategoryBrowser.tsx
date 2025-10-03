@@ -3,13 +3,10 @@ import { useGrocery } from '@/context/GroceryContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Settings, Leaf, DollarSign } from 'lucide-react';
+import { Loader2, Settings, Leaf, DollarSign, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import RecipeCard from './RecipeCard';
-import RecipeDrawer from './RecipeDrawer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import type { Recipe } from '@/data/recipeDatabase';
 
 interface DynamicCategory {
   name: string;
@@ -34,10 +31,9 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 }) => {
   const [categories, setCategories] = useState<DynamicCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [ingredients, setIngredients] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingRecipes, setLoadingRecipes] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [totalSpent, setTotalSpent] = useState(0);
   const { addItem, groceryItems } = useGrocery();
   const { toast } = useToast();
@@ -59,9 +55,9 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
   useEffect(() => {
     if (selectedCategory) {
-      fetchCategoryRecipes(selectedCategory);
+      fetchCategoryIngredients(selectedCategory);
     } else {
-      setRecipes([]);
+      setIngredients([]);
     }
   }, [selectedCategory]);
 
@@ -91,12 +87,12 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
     }
   };
 
-  const fetchCategoryRecipes = async (categoryName: string) => {
-    setLoadingRecipes(true);
+  const fetchCategoryIngredients = async (categoryName: string) => {
+    setLoadingIngredients(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-recipes', {
         body: {
-          type: 'category',
+          type: 'ingredients',
           category: categoryName,
           filters: {
             isVegetarian,
@@ -108,24 +104,28 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
       if (error) throw error;
 
-      if (data?.recipes) {
-        setRecipes(data.recipes);
+      if (data?.ingredients) {
+        setIngredients(data.ingredients);
       }
     } catch (error) {
-      console.error('Error fetching category recipes:', error);
+      console.error('Error fetching category ingredients:', error);
       toast({
         title: "Error",
-        description: "Couldn't load recipes for this category. Please try again.",
+        description: "Couldn't load ingredients for this category. Please try again.",
         variant: "destructive",
       });
-      setRecipes([]);
+      setIngredients([]);
     } finally {
-      setLoadingRecipes(false);
+      setLoadingIngredients(false);
     }
   };
 
-  const handleViewRecipe = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
+  const handleAddIngredient = (ingredient: string) => {
+    addItem(ingredient, selectedCategory);
+    toast({
+      title: "Added to list",
+      description: `${ingredient} has been added to your grocery list.`,
+    });
   };
 
   if (loading) {
@@ -218,63 +218,61 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
             </Select>
           </div>
 
-          {selectedCategory && loadingRecipes && (
+          {selectedCategory && loadingIngredients && (
             <div className="animate-in slide-in-from-top-4 duration-300">
               <h3 className="font-semibold mb-4 text-primary">
-                Recipes in {selectedCategory}
+                Ingredients in {selectedCategory}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(5)].map((_, i) => (
-                  <Card key={i} className="p-4 space-y-3">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-10 w-full" />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {[...Array(10)].map((_, i) => (
+                  <Card key={i} className="p-4">
+                    <Skeleton className="h-6 w-full mb-2" />
+                    <Skeleton className="h-8 w-full" />
                   </Card>
                 ))}
               </div>
             </div>
           )}
 
-          {selectedCategory && !loadingRecipes && recipes.length > 0 && (
+          {selectedCategory && !loadingIngredients && ingredients.length > 0 && (
             <div className="animate-in slide-in-from-top-4 duration-300">
               <h3 className="font-semibold mb-4 text-primary">
-                Recipes in {selectedCategory} ({recipes.length})
+                Ingredients in {selectedCategory} ({ingredients.length})
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onViewDetails={handleViewRecipe}
-                  />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {ingredients.map((ingredient, index) => (
+                  <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col gap-2">
+                      <p className="font-medium text-sm">{ingredient}</p>
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddIngredient(ingredient)}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
 
-          {selectedCategory && !loadingRecipes && recipes.length === 0 && (
+          {selectedCategory && !loadingIngredients && ingredients.length === 0 && (
             <div className="text-center py-6 text-muted-foreground">
-              <p className="font-medium">Couldn't load recipes for this category. Please try again.</p>
+              <p className="font-medium">Couldn't load ingredients for this category. Please try again.</p>
               <p className="text-sm">Try selecting a different category</p>
             </div>
           )}
 
           {!selectedCategory && (
             <div className="text-center py-12 text-muted-foreground">
-              <p className="font-medium">Select a category above to browse recipes</p>
+              <p className="font-medium">Select a category above to browse ingredients</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {selectedRecipe && (
-        <RecipeDrawer
-          recipe={selectedRecipe}
-          isOpen={!!selectedRecipe}
-          onClose={() => setSelectedRecipe(null)}
-        />
-      )}
     </div>
   );
 };

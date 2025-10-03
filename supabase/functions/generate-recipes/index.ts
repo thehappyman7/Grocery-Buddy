@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface RecipeRequest {
-  type: 'quick' | 'trending' | 'seasonal' | 'category';
+  type: 'quick' | 'trending' | 'seasonal' | 'category' | 'ingredients';
   filters: {
     isVegetarian: boolean;
     cuisine: string;
@@ -50,6 +50,60 @@ serve(async (req) => {
       case 'category':
         prompt = `Give me 5 recipes in the category "${category}" for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
+      case 'ingredients':
+        prompt = `List 10 common grocery ingredients that belong to the category "${category}". Return only ingredient names in a simple array (no descriptions, no measurements). Return a JSON array of strings: ["ingredient1", "ingredient2", ...]`;
+        
+        console.log(`Calling Lovable AI Gateway for ${category} ingredients...`);
+
+        const ingredientsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a helpful grocery assistant. You generate practical ingredient lists in JSON format.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 1000
+          })
+        });
+
+        if (!ingredientsResponse.ok) {
+          const errorText = await ingredientsResponse.text();
+          console.error('Lovable AI Gateway error:', ingredientsResponse.status, errorText);
+          
+          if (ingredientsResponse.status === 429) {
+            throw new Error('Rate limit exceeded. Please try again in a moment.');
+          }
+          if (ingredientsResponse.status === 402) {
+            throw new Error('AI service requires payment. Please add credits to your workspace.');
+          }
+          
+          throw new Error(`AI Gateway error: ${ingredientsResponse.status}`);
+        }
+
+        const ingredientsData = await ingredientsResponse.json();
+        const ingredientsText = ingredientsData.choices[0].message.content;
+        
+        // Parse the JSON from the response
+        const cleanedIngredientsJson = ingredientsText.replace(/```json\n?|\n?```/g, '').trim();
+        const ingredients = JSON.parse(cleanedIngredientsJson);
+
+        console.log(`Generated ${ingredients.length} ingredients for ${category}`);
+
+        return new Response(JSON.stringify({ ingredients }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
     }
 
     prompt += `
