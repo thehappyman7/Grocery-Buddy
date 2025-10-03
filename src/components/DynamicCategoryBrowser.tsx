@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useGrocery } from '@/context/GroceryContext';
 import { Button } from '@/components/ui/button';
-import IngredientButton from '@/components/ui/ingredient-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Settings, Leaf, DollarSign } from 'lucide-react';
-import { ingredientDatabase, findIngredientMatches } from '@/data/ingredientDatabase';
 import { supabase } from '@/integrations/supabase/client';
+import RecipeCard from './RecipeCard';
+import RecipeDrawer from './RecipeDrawer';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import type { Recipe } from '@/data/recipeDatabase';
 
 interface DynamicCategory {
   name: string;
@@ -31,10 +34,13 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 }) => {
   const [categories, setCategories] = useState<DynamicCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [categoryItems, setCategoryItems] = useState<string[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [totalSpent, setTotalSpent] = useState(0);
   const { addItem, groceryItems } = useGrocery();
+  const { toast } = useToast();
 
   useEffect(() => {
     generateCategories();
@@ -53,9 +59,9 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
   useEffect(() => {
     if (selectedCategory) {
-      generateCategoryItems(selectedCategory);
+      fetchCategoryRecipes(selectedCategory);
     } else {
-      setCategoryItems([]);
+      setRecipes([]);
     }
   }, [selectedCategory]);
 
@@ -85,65 +91,41 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
     }
   };
 
-  const generateCategoryItems = async (categoryName: string) => {
+  const fetchCategoryRecipes = async (categoryName: string) => {
+    setLoadingRecipes(true);
     try {
-      // Get relevant ingredients from database based on category name and user preferences
-      const relevantIngredients = ingredientDatabase.filter(ingredient => {
-        const categoryLower = categoryName.toLowerCase();
-        const ingredientCategory = ingredient.category.toLowerCase();
-        const ingredientName = ingredient.name.toLowerCase();
-        
-        // Check if ingredient fits the category
-        const categoryMatch = 
-          categoryLower.includes(ingredientCategory) ||
-          ingredientCategory.includes(categoryLower.split(' ')[0]) ||
-          (categoryLower.includes('staple') && ['grains', 'pulses'].includes(ingredientCategory)) ||
-          (categoryLower.includes('vegetable') && ['vegetables', 'herbs'].includes(ingredientCategory)) ||
-          (categoryLower.includes('spice') && ['spices', 'herbs', 'seasonings'].includes(ingredientCategory)) ||
-          (categoryLower.includes('dairy') && ['dairy', 'protein'].includes(ingredientCategory)) ||
-          (categoryLower.includes('protein') && ['protein', 'dairy'].includes(ingredientCategory));
-
-        // Check if ingredient fits user's cuisine preferences
-        const cuisineMatch = cuisines.some(cuisine => {
-          if (cuisine === 'Indian' && ingredient.origin === 'Indian') return true;
-          if (cuisine !== 'Indian' && ingredient.origin !== 'Indian') return true;
-          if (ingredient.origin === 'Universal') return true;
-          return false;
-        });
-
-        // Filter out non-vegetarian items if vegetarian mode is enabled
-        const vegetarianMatch = !isVegetarian || !ingredient.category.toLowerCase().includes('meat') && 
-                                                !ingredient.category.toLowerCase().includes('fish') && 
-                                                !ingredient.category.toLowerCase().includes('poultry') &&
-                                                !ingredient.name.toLowerCase().includes('chicken') &&
-                                                !ingredient.name.toLowerCase().includes('beef') &&
-                                                !ingredient.name.toLowerCase().includes('pork') &&
-                                                !ingredient.name.toLowerCase().includes('fish') &&
-                                                !ingredient.name.toLowerCase().includes('mutton');
-
-        return categoryMatch && cuisineMatch && vegetarianMatch;
+      const { data, error } = await supabase.functions.invoke('generate-recipes', {
+        body: {
+          type: 'category',
+          category: categoryName,
+          filters: {
+            isVegetarian,
+            cuisine: cuisines[0] || 'all',
+            budget: budget || 0
+          }
+        }
       });
 
-      // Limit to 12-15 items per category and capitalize names
-      const items = relevantIngredients
-        .slice(0, 15)
-        .map(ingredient => 
-          ingredient.name.charAt(0).toUpperCase() + ingredient.name.slice(1)
-        );
+      if (error) throw error;
 
-      setCategoryItems(items);
+      if (data?.recipes) {
+        setRecipes(data.recipes);
+      }
     } catch (error) {
-      console.error('Error generating category items:', error);
-      setCategoryItems([]);
+      console.error('Error fetching category recipes:', error);
+      toast({
+        title: "Error",
+        description: "Couldn't load recipes for this category. Please try again.",
+        variant: "destructive",
+      });
+      setRecipes([]);
+    } finally {
+      setLoadingRecipes(false);
     }
   };
 
-  const handleAddItem = (itemName: string) => {
-    addItem(itemName, selectedCategory);
-  };
-
-  const isItemInCart = (itemName: string) => {
-    return groceryItems.some(item => item.name.toLowerCase() === itemName.toLowerCase());
+  const handleViewRecipe = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
   };
 
   if (loading) {
@@ -236,45 +218,63 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
             </Select>
           </div>
 
-          {selectedCategory && categoryItems.length > 0 && (
+          {selectedCategory && loadingRecipes && (
             <div className="animate-in slide-in-from-top-4 duration-300">
               <h3 className="font-semibold mb-4 text-primary">
-                Items in {selectedCategory} ({categoryItems.length})
+                Recipes in {selectedCategory}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                {categoryItems.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center justify-between p-4 border-2 border-border bg-muted/30 rounded-xl hover:border-primary/40 hover:shadow-md transition-all duration-200"
-                  >
-                    <span className="text-sm font-medium">{item}</span>
-                    <IngredientButton
-                      variant="add"
-                      itemName={item}
-                      onAction={() => handleAddItem(item)}
-                      disabled={isItemInCart(item)}
-                      showConfirmation={false}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <Card key={i} className="p-4 space-y-3">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </Card>
                 ))}
               </div>
             </div>
           )}
 
-          {selectedCategory && categoryItems.length === 0 && (
+          {selectedCategory && !loadingRecipes && recipes.length > 0 && (
+            <div className="animate-in slide-in-from-top-4 duration-300">
+              <h3 className="font-semibold mb-4 text-primary">
+                Recipes in {selectedCategory} ({recipes.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onViewDetails={handleViewRecipe}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedCategory && !loadingRecipes && recipes.length === 0 && (
             <div className="text-center py-6 text-muted-foreground">
-              <p className="font-medium">No items found for this category</p>
+              <p className="font-medium">Couldn't load recipes for this category. Please try again.</p>
               <p className="text-sm">Try selecting a different category</p>
             </div>
           )}
 
           {!selectedCategory && (
             <div className="text-center py-12 text-muted-foreground">
-              <p className="font-medium">Select a category above to browse available items</p>
+              <p className="font-medium">Select a category above to browse recipes</p>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {selectedRecipe && (
+        <RecipeDrawer
+          recipe={selectedRecipe}
+          isOpen={!!selectedRecipe}
+          onClose={() => setSelectedRecipe(null)}
+        />
+      )}
     </div>
   );
 };

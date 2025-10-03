@@ -7,12 +7,13 @@ const corsHeaders = {
 };
 
 interface RecipeRequest {
-  type: 'quick' | 'trending' | 'seasonal';
+  type: 'quick' | 'trending' | 'seasonal' | 'category';
   filters: {
     isVegetarian: boolean;
     cuisine: string;
     budget: number;
   };
+  category?: string;
 }
 
 serve(async (req) => {
@@ -21,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type, filters }: RecipeRequest = await req.json();
+    const { type, filters, category }: RecipeRequest = await req.json();
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     if (!lovableApiKey) {
@@ -45,6 +46,9 @@ serve(async (req) => {
         break;
       case 'seasonal':
         prompt = `Give me 5 seasonal recipes based on currently available vegetables and fruits for ${currentMonth} (${currentSeason} season), ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
+        break;
+      case 'category':
+        prompt = `Give me 5 recipes in the category "${category}" for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
     }
 
