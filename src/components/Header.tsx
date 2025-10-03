@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useGrocery } from '@/context/GroceryContext';
 import { ShoppingCart, Trash2, TestTube } from 'lucide-react';
-import { testGeminiConnection } from '@/utils/testGemini';
+import { testGeminiAPI } from '@/utils/testGemini';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +41,7 @@ const Header: React.FC = () => {
           <Button 
             variant="secondary" 
             size="sm" 
-            onClick={testGeminiConnection}
+            onClick={testGeminiAPI}
             className="flex items-center gap-2"
           >
             <TestTube className="h-4 w-4" /> Test Gemini
