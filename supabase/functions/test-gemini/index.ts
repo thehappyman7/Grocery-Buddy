@@ -30,7 +30,7 @@ serve(async (req) => {
     console.log('✅ API key found, making request to Gemini...');
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: {
