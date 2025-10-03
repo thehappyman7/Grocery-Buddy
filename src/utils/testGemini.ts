@@ -1,49 +1,41 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export const testGeminiConnection = async () => {
   try {
-    console.log('🧪 Testing Gemini API connection...');
-    
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      console.error('❌ VITE_GEMINI_API_KEY not found in environment variables');
+    console.log('🧪 Testing Gemini API connection via edge function...');
+
+    const { data, error } = await supabase.functions.invoke('test-gemini');
+
+    if (error) {
+      console.error('❌ Edge function error:', {
+        status: error.status,
+        message: error.message,
+        details: error
+      });
+      alert(`Gemini Test Failed!\n\nError: ${error.message}\nStatus: ${error.status || 'unknown'}`);
       return;
     }
 
-    console.log('✅ API key found, making request to Gemini...');
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: "Hello Gemini, are you working? Please respond with a simple 'Yes, I'm working correctly!' message."
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 100,
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status} - ${response.statusText}`);
+    if (data?.error) {
+      console.error('❌ Gemini API error:', {
+        error: data.error,
+        details: data.details
+      });
+      alert(`Gemini Test Failed!\n\nError: ${data.error}`);
+      return;
     }
 
-    const data = await response.json();
-    const geminiResponse = data.candidates[0].content.parts[0].text;
-    
-    console.log('🎉 Gemini API Response:', geminiResponse);
+    console.log('🎉 Gemini API Response:', data.message);
     console.log('✅ Gemini connection test successful!');
     
-    // Also show an alert for visual feedback
-    alert(`Gemini Test Successful!\n\nResponse: ${geminiResponse}`);
+    alert(`Gemini Test Successful!\n\nResponse: ${data.message}`);
     
   } catch (error) {
-    console.error('❌ Gemini API test failed:', error);
+    console.error('❌ Gemini API test failed:', {
+      status: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      fullError: error
+    });
     alert(`Gemini Test Failed!\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
