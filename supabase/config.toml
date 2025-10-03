@@ -1,8 +1,5 @@
 project_id = "egwagwdvmmyposlsjyje"
 
-[functions.test-gemini]
-verify_jwt = false
-
 [functions.generate-categories]
 verify_jwt = false
 

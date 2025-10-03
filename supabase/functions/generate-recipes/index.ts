@@ -22,10 +22,11 @@ serve(async (req) => {
 
   try {
     const { type, filters }: RecipeRequest = await req.json();
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+    if (!lovableApiKey) {
+      console.error('LOVABLE_API_KEY not configured');
+      throw new Error('AI service not configured');
     }
 
     // Build prompt based on request type
@@ -37,19 +38,19 @@ serve(async (req) => {
 
     switch (type) {
       case 'quick':
-        prompt = `Generate 8 diverse quick meal recipes under 30 minutes for ${dietaryRestriction} diet and ${cuisineFilter}. Budget-friendly options preferred.`;
+        prompt = `Give me 5 quick recipes that can be prepared under 20 minutes for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
       case 'trending':
-        prompt = `Generate 8 currently popular and trending recipes for ${dietaryRestriction} diet and ${cuisineFilter}. Include comfort foods and restaurant-style dishes that are popular right now.`;
+        prompt = `Give me 5 currently trending grocery recipes for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
       case 'seasonal':
-        prompt = `Generate 8 seasonal recipes perfect for ${currentMonth} (${currentSeason} season) for ${dietaryRestriction} diet and ${cuisineFilter}. Use seasonal ingredients and cooking methods appropriate for this time of year.`;
+        prompt = `Give me 5 seasonal recipes based on currently available vegetables and fruits for ${currentMonth} (${currentSeason} season), ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
     }
 
     prompt += `
 
-Return a JSON array of exactly 8 recipe objects with this structure:
+Return a JSON array of exactly 5 recipe objects with this structure:
 {
   "id": "unique_id",
   "name": "Recipe Name",
@@ -63,7 +64,7 @@ Return a JSON array of exactly 8 recipe objects with this structure:
 }
 
 Make sure:
-- Each recipe has 6-10 realistic ingredients
+- Each recipe has 6-10 realistic ingredients (NAMES ONLY, no measurements)
 - Cooking times are accurate and varied
 - Instructions are brief but clear (3-5 steps)
 - Use diverse cuisines and cooking methods
@@ -73,32 +74,47 @@ Make sure:
 
 Return only the JSON array, no other text.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
+    console.log(`Calling Lovable AI Gateway for ${type} recipes...`);
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4000,
-        }
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful recipe assistant. You generate practical, delicious recipes in JSON format.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Lovable AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      if (response.status === 402) {
+        throw new Error('AI service requires payment. Please add credits to your workspace.');
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const generatedText = data.candidates[0].content.parts[0].text;
+    const generatedText = data.choices[0].message.content;
     
     // Parse the JSON from the response
     const cleanedJson = generatedText.replace(/```json\n?|\n?```/g, '').trim();
