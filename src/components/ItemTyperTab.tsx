@@ -43,22 +43,26 @@ const ItemTyperTab = () => {
       </style>
       
       {/* Manual Add Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">Add New Items</h2>
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground">Add New Items</h2>
           <Button
             onClick={toggleAddForm}
             variant="outline"
             size="sm"
-            className="bg-gradient-to-r from-primary to-primary text-white border-0 hover:from-primary/80 hover:to-primary/80 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+            className="bg-gradient-to-r from-primary to-primary text-white border-0 hover:from-primary/80 hover:to-primary/80 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
           >
             {showAddForm ? (
               <>
-                <X className="h-4 w-4" /> Hide Form
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> 
+                <span className="hidden xs:inline">Hide Form</span>
+                <span className="xs:hidden">Hide</span>
               </>
             ) : (
               <>
-                <Plus className="h-4 w-4" /> Show Form
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> 
+                <span className="hidden xs:inline">Show Form</span>
+                <span className="xs:hidden">Show</span>
               </>
             )}
           </Button>
@@ -67,12 +71,12 @@ const ItemTyperTab = () => {
         {showAddForm && <AddGroceryForm />}
       </div>
 
-      <Separator className="my-8" />
+      <Separator className="my-6 sm:my-8" />
 
       {/* Browse by Category Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-foreground">Browse by Category</h2>
-        <p className="text-sm text-muted-foreground">
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground">Browse by Category</h2>
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Or select items from personalized categories based on your preferences
         </p>
         
@@ -92,11 +96,11 @@ const ItemTyperTab = () => {
         )}
       </div>
 
-      <Separator className="my-8" />
+      <Separator className="my-6 sm:my-8" />
 
       {/* Cart View Section */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-primary border-b pb-2">
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-base sm:text-lg font-semibold text-primary border-b pb-2">
           Your Cart
         </h2>
         <GroceryList />

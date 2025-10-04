@@ -56,36 +56,36 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, badgeText, badgeIcon, o
   };
 
   return (
-    <Card className="transition-all hover:shadow-md cursor-pointer group">
-      <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center text-4xl">
+    <Card className="transition-all hover:shadow-md cursor-pointer group h-full flex flex-col">
+      <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center text-3xl sm:text-4xl">
         {getCuisineIcon(recipe.cuisine)}
       </div>
       
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg leading-tight line-clamp-2" onClick={() => onViewDetails(recipe)}>
+          <CardTitle className="text-base sm:text-lg leading-tight line-clamp-2 flex-1" onClick={() => onViewDetails(recipe)}>
             {recipe.name}
           </CardTitle>
           <div className="flex flex-col gap-1 shrink-0">
             {badgeText && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-[10px] sm:text-xs whitespace-nowrap">
                 {badgeIcon} {badgeText}
               </Badge>
             )}
             {recipe.matchedIngredients !== undefined && recipe.matchedIngredients > 0 && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800 text-xs">
-                ✓ {recipe.matchedIngredients} matched
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800 text-[10px] sm:text-xs whitespace-nowrap">
+                ✓ {recipe.matchedIngredients}
               </Badge>
             )}
             {recipe.extraIngredientsNeeded !== undefined && recipe.extraIngredientsNeeded > 0 && (
-              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800 text-xs">
-                +{recipe.extraIngredientsNeeded} extra
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800 text-[10px] sm:text-xs whitespace-nowrap">
+                +{recipe.extraIngredientsNeeded}
               </Badge>
             )}
           </div>
         </div>
         
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
             <span>{recipe.cookingTime} min</span>
@@ -94,17 +94,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, badgeText, badgeIcon, o
             <Users className="h-3 w-3" />
             <span>{recipe.servings}</span>
           </div>
-          <Badge className={getDifficultyColor(recipe.difficulty)} variant="outline">
+          <Badge className={`${getDifficultyColor(recipe.difficulty)} text-[10px] sm:text-xs`} variant="outline">
             {recipe.difficulty}
           </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground line-clamp-2">{recipe.description}</p>
+      <CardContent className="space-y-3 px-3 sm:px-6 pb-3 sm:pb-6 flex-1 flex flex-col">
+        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 flex-1">{recipe.description}</p>
         
-        <div className="flex items-center justify-between gap-2">
-          <Badge variant="outline" className="text-xs">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <Badge variant="outline" className="text-[10px] sm:text-xs">
             {recipe.cuisine}
           </Badge>
           <Button 
@@ -114,10 +114,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, badgeText, badgeIcon, o
               e.stopPropagation();
               handleAddMissingIngredients();
             }}
-            className="text-xs"
+            className="text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3"
           >
             <ShoppingCart className="h-3 w-3 mr-1" />
-            Add to Cart
+            <span className="hidden xs:inline">Add to Cart</span>
+            <span className="xs:hidden">Add</span>
           </Button>
         </div>
       </CardContent>
