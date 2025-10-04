@@ -106,6 +106,15 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
       if (data?.ingredients) {
         setIngredients(data.ingredients);
+        
+        // Show a subtle message if using fallback ingredients
+        if (data.source === 'fallback' && data.message) {
+          toast({
+            title: "Using default ingredients",
+            description: data.message,
+            variant: "default",
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching category ingredients:', error);

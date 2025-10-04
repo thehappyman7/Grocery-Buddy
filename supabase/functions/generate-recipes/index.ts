@@ -57,59 +57,140 @@ serve(async (req) => {
         prompt = `Give me 5 recipes in the category "${category}" for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
       case 'ingredients':
-        prompt = `List 10 common grocery ingredients that belong to the category "${category}". Return only ingredient names in a simple array (no descriptions, no measurements). Return a JSON array of strings: ["ingredient1", "ingredient2", ...]`;
+        prompt = `List exactly 10 common grocery ingredients that belong to the category "${category}".
+
+CRITICAL INSTRUCTIONS:
+- ONLY return a JSON array of short ingredient names (strings). Example: ["Turmeric","Cumin","Coriander","Cardamom","Black Pepper","Cinnamon","Cloves","Nutmeg","Bay Leaves","Mustard Seeds"]
+- DO NOT return recipes, instructions, quantities, or extra text.
+- DO NOT include measurements, units, or parenthetical descriptions.
+- If you cannot confidently produce 10 items, return as many correct items as you can in the same JSON array.
+
+Return ONLY the JSON array, nothing else.`;
         
         console.log(`Calling Lovable AI Gateway for ${category} ingredients...`);
 
-        const ingredientsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a helpful grocery assistant. You generate practical ingredient lists in JSON format.'
-              },
-              {
-                role: 'user',
-                content: prompt
+        try {
+          const ingredientsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${lovableApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a grocery shopping assistant that returns ONLY ingredient names in JSON format.'
+                },
+                {
+                  role: 'user',
+                  content: prompt
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 1000
+            })
+          });
+
+          if (!ingredientsResponse.ok) {
+            const errorText = await ingredientsResponse.text();
+            console.error('Lovable AI Gateway error:', ingredientsResponse.status, errorText);
+            
+            if (ingredientsResponse.status === 429 || ingredientsResponse.status === 402) {
+              // Use fallback for rate limit or payment issues
+              console.log('Rate limit/payment issue, using fallback ingredients');
+              const fallbackIngredients = getFallbackIngredients(category || 'general');
+              return new Response(JSON.stringify({ 
+                ingredients: fallbackIngredients,
+                source: 'fallback',
+                message: 'Showing default ingredients'
+              }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+            
+            throw new Error(`AI Gateway error: ${ingredientsResponse.status}`);
+          }
+
+          const ingredientsData = await ingredientsResponse.json();
+          const ingredientsText = ingredientsData.choices[0]?.message?.content;
+          
+          if (!ingredientsText) {
+            throw new Error('No content in AI response');
+          }
+
+          console.log('Raw AI response for ingredients:', ingredientsText);
+          
+          // Attempt to parse JSON
+          let ingredients: string[];
+          try {
+            // Clean markdown code blocks
+            const cleanedJson = ingredientsText.replace(/```json\n?|\n?```/g, '').trim();
+            const parsed = JSON.parse(cleanedJson);
+            
+            if (Array.isArray(parsed)) {
+              ingredients = parsed
+                .filter((item: any) => typeof item === 'string')
+                .map((item: string) => item.trim())
+                .filter((item: string) => item.length > 0 && item.length < 50);
+            } else {
+              throw new Error('Response is not an array');
+            }
+          } catch (parseError) {
+            console.error('JSON parse failed, attempting secondary parse:', parseError);
+            
+            // Secondary parse: extract from plain text
+            const lines = ingredientsText.split('\n').filter((line: string) => line.trim());
+            ingredients = [];
+            
+            for (const line of lines) {
+              // Remove bullets, numbers, dashes, and extra whitespace
+              const cleaned = line.replace(/^[-*•\d.)\s]+/, '').trim();
+              // Remove anything in parentheses or after common separators
+              const ingredient = cleaned.split(/[(\-:]/)[0].trim();
+              
+              if (ingredient && ingredient.length > 0 && ingredient.length < 50 && !ingredient.toLowerCase().includes('recipe')) {
+                ingredients.push(ingredient);
               }
-            ],
-            temperature: 0.7,
-            max_tokens: 1000
-          })
-        });
+            }
+            
+            if (ingredients.length === 0) {
+              console.error('Secondary parse failed, using fallback');
+              ingredients = getFallbackIngredients(category || 'general');
+              
+              return new Response(JSON.stringify({ 
+                ingredients,
+                source: 'fallback',
+                message: 'Showing default ingredients'
+              }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+            
+            console.log('Extracted ingredients from text:', ingredients);
+          }
 
-        if (!ingredientsResponse.ok) {
-          const errorText = await ingredientsResponse.text();
-          console.error('Lovable AI Gateway error:', ingredientsResponse.status, errorText);
+          console.log(`Generated ${ingredients.length} ingredients for ${category}`);
+
+          return new Response(JSON.stringify({ 
+            ingredients,
+            source: 'lovable'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Error fetching ingredients:', error);
+          const fallbackIngredients = getFallbackIngredients(category || 'general');
           
-          if (ingredientsResponse.status === 429) {
-            throw new Error('Rate limit exceeded. Please try again in a moment.');
-          }
-          if (ingredientsResponse.status === 402) {
-            throw new Error('AI service requires payment. Please add credits to your workspace.');
-          }
-          
-          throw new Error(`AI Gateway error: ${ingredientsResponse.status}`);
+          return new Response(JSON.stringify({ 
+            ingredients: fallbackIngredients,
+            source: 'fallback',
+            message: 'Showing default ingredients'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
-
-        const ingredientsData = await ingredientsResponse.json();
-        const ingredientsText = ingredientsData.choices[0].message.content;
-        
-        // Parse the JSON from the response
-        const cleanedIngredientsJson = ingredientsText.replace(/```json\n?|\n?```/g, '').trim();
-        const ingredients = JSON.parse(cleanedIngredientsJson);
-
-        console.log(`Generated ${ingredients.length} ingredients for ${category}`);
-
-        return new Response(JSON.stringify({ ingredients }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
     }
 
     const ingredientMatchClause = userIngredients.length > 0 
@@ -218,4 +299,39 @@ function getCurrentSeason(): string {
   if (month >= 6 && month <= 8) return 'summer';
   if (month >= 9 && month <= 11) return 'autumn';
   return 'winter';
+}
+
+function getFallbackIngredients(category: string): string[] {
+  const fallbacks: Record<string, string[]> = {
+    'Spices & Seasonings': [
+      'Turmeric', 'Cumin', 'Coriander', 'Black Pepper', 'Red Chili Powder',
+      'Garam Masala', 'Cardamom', 'Cinnamon', 'Cloves', 'Bay Leaves'
+    ],
+    'Vegetables & Herbs': [
+      'Tomatoes', 'Onions', 'Garlic', 'Ginger', 'Green Chilies',
+      'Cilantro', 'Curry Leaves', 'Potatoes', 'Cauliflower', 'Spinach'
+    ],
+    'Staples & Grains': [
+      'Rice', 'Wheat Flour', 'Lentils', 'Chickpeas', 'Basmati Rice',
+      'All-Purpose Flour', 'Semolina', 'Rice Flour', 'Red Lentils', 'Split Peas'
+    ],
+    'Dairy & Proteins': [
+      'Milk', 'Yogurt', 'Paneer', 'Eggs', 'Butter',
+      'Ghee', 'Cream', 'Cheese', 'Chicken', 'Fish'
+    ],
+    'Oils & Condiments': [
+      'Vegetable Oil', 'Mustard Oil', 'Olive Oil', 'Sesame Oil', 'Coconut Oil',
+      'Salt', 'Sugar', 'Vinegar', 'Soy Sauce', 'Tamarind Paste'
+    ],
+    'Snacks & Beverages': [
+      'Tea', 'Coffee', 'Biscuits', 'Chips', 'Nuts',
+      'Dried Fruits', 'Cookies', 'Instant Noodles', 'Juice', 'Soft Drinks'
+    ],
+    'general': [
+      'Rice', 'Flour', 'Oil', 'Salt', 'Sugar',
+      'Onions', 'Tomatoes', 'Garlic', 'Ginger', 'Potatoes'
+    ]
+  };
+  
+  return fallbacks[category] || fallbacks['general'];
 }
