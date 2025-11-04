@@ -38,7 +38,7 @@ Examples:
 
 Return ONLY the JSON array, no other text.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -51,30 +51,34 @@ Return ONLY the JSON array, no other text.`;
         }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 800,
-          responseMimeType: "application/json"
+          maxOutputTokens: 800
         }
       }),
     });
 
+    if (!response.ok) {
+      return new Response(JSON.stringify({ categories: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
-      throw new Error('Invalid response from Gemini API');
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return new Response(JSON.stringify({ categories: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     
     const categoriesText = data.candidates[0].content.parts[0].text;
-    
-    // Parse the JSON response
-    const categories = JSON.parse(categoriesText);
+    const cleanedJson = categoriesText.replace(/```json\n?|\n?```/g, '').trim();
+    const categories = JSON.parse(cleanedJson);
 
     return new Response(JSON.stringify({ categories }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in generate-categories function:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
+    return new Response(JSON.stringify({ categories: [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

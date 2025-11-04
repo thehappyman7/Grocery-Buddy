@@ -25,10 +25,9 @@ serve(async (req) => {
 
   try {
     const { type, filters, category, userIngredients = [], excludeRecipeIds = [] }: RecipeRequest = await req.json();
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
-    if (!lovableApiKey) {
-      console.error('LOVABLE_API_KEY not configured');
+    if (!geminiApiKey) {
       throw new Error('AI service not configured');
     }
 
@@ -67,65 +66,50 @@ CRITICAL INSTRUCTIONS:
 
 Return ONLY the JSON array, nothing else.`;
         
-        console.log(`Calling Lovable AI Gateway for ${category} ingredients...`);
-
         try {
-          const ingredientsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const ingredientsResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${lovableApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                {
-                  role: 'system',
-                  content: 'You are a grocery shopping assistant that returns ONLY ingredient names in JSON format.'
-                },
-                {
-                  role: 'user',
-                  content: prompt
-                }
-              ],
-              temperature: 0.7,
-              max_tokens: 1000
+              contents: [{
+                parts: [{
+                  text: prompt
+                }]
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1000
+              }
             })
           });
 
           if (!ingredientsResponse.ok) {
-            const errorText = await ingredientsResponse.text();
-            console.error('Lovable AI Gateway error:', ingredientsResponse.status, errorText);
-            
-            if (ingredientsResponse.status === 429 || ingredientsResponse.status === 402) {
-              // Use fallback for rate limit or payment issues
-              console.log('Rate limit/payment issue, using fallback ingredients');
-              const fallbackIngredients = getFallbackIngredients(category || 'general');
-              return new Response(JSON.stringify({ 
-                ingredients: fallbackIngredients,
-                source: 'fallback',
-                message: 'Showing default ingredients'
-              }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              });
-            }
-            
-            throw new Error(`AI Gateway error: ${ingredientsResponse.status}`);
+            const fallbackIngredients = getFallbackIngredients(category || 'general');
+            return new Response(JSON.stringify({ 
+              ingredients: fallbackIngredients,
+              source: 'fallback'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
           }
 
           const ingredientsData = await ingredientsResponse.json();
-          const ingredientsText = ingredientsData.choices[0]?.message?.content;
+          const ingredientsText = ingredientsData.candidates?.[0]?.content?.parts?.[0]?.text;
           
           if (!ingredientsText) {
-            throw new Error('No content in AI response');
+            const fallbackIngredients = getFallbackIngredients(category || 'general');
+            return new Response(JSON.stringify({ 
+              ingredients: fallbackIngredients,
+              source: 'fallback'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
           }
-
-          console.log('Raw AI response for ingredients:', ingredientsText);
           
-          // Attempt to parse JSON
           let ingredients: string[];
           try {
-            // Clean markdown code blocks
             const cleanedJson = ingredientsText.replace(/```json\n?|\n?```/g, '').trim();
             const parsed = JSON.parse(cleanedJson);
             
@@ -138,16 +122,11 @@ Return ONLY the JSON array, nothing else.`;
               throw new Error('Response is not an array');
             }
           } catch (parseError) {
-            console.error('JSON parse failed, attempting secondary parse:', parseError);
-            
-            // Secondary parse: extract from plain text
             const lines = ingredientsText.split('\n').filter((line: string) => line.trim());
             ingredients = [];
             
             for (const line of lines) {
-              // Remove bullets, numbers, dashes, and extra whitespace
               const cleaned = line.replace(/^[-*•\d.)\s]+/, '').trim();
-              // Remove anything in parentheses or after common separators
               const ingredient = cleaned.split(/[(\-:]/)[0].trim();
               
               if (ingredient && ingredient.length > 0 && ingredient.length < 50 && !ingredient.toLowerCase().includes('recipe')) {
@@ -156,37 +135,22 @@ Return ONLY the JSON array, nothing else.`;
             }
             
             if (ingredients.length === 0) {
-              console.error('Secondary parse failed, using fallback');
               ingredients = getFallbackIngredients(category || 'general');
-              
-              return new Response(JSON.stringify({ 
-                ingredients,
-                source: 'fallback',
-                message: 'Showing default ingredients'
-              }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              });
             }
-            
-            console.log('Extracted ingredients from text:', ingredients);
           }
-
-          console.log(`Generated ${ingredients.length} ingredients for ${category}`);
 
           return new Response(JSON.stringify({ 
             ingredients,
-            source: 'lovable'
+            source: 'gemini'
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } catch (error) {
-          console.error('Error fetching ingredients:', error);
           const fallbackIngredients = getFallbackIngredients(category || 'general');
           
           return new Response(JSON.stringify({ 
             ingredients: fallbackIngredients,
-            source: 'fallback',
-            message: 'Showing default ingredients'
+            source: 'fallback'
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -226,70 +190,50 @@ ${ingredientMatchClause}
 
 Return only the JSON array, no other text.`;
 
-    console.log(`Calling Lovable AI Gateway for ${type} recipes...`);
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful recipe assistant. You generate practical, delicious recipes in JSON format.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 4000
+        }
       })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Lovable AI Gateway error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again in a moment.');
-      }
-      if (response.status === 402) {
-        throw new Error('AI service requires payment. Please add credits to your workspace.');
-      }
-      
-      throw new Error(`AI Gateway error: ${response.status}`);
+      return new Response(JSON.stringify({ recipes: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
-    const generatedText = data.choices[0].message.content;
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    // Parse the JSON from the response
+    if (!generatedText) {
+      return new Response(JSON.stringify({ recipes: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     const cleanedJson = generatedText.replace(/```json\n?|\n?```/g, '').trim();
     const recipes = JSON.parse(cleanedJson);
-
-    console.log(`Generated ${recipes.length} ${type} recipes`);
 
     return new Response(JSON.stringify({ recipes }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error generating recipes:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to generate recipes',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ recipes: [] }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
 
