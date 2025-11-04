@@ -14,11 +14,15 @@ serve(async (req) => {
   }
 
   try {
-    const { country, cuisines, isVegetarian, budget } = await req.json();
+  const { location, cuisines, isVegetarian, budget } = await req.json();
+  
+  const locationText = location?.city 
+    ? `${location.city}, ${location.country}` 
+    : location?.country || 'general region';
 
     const vegetarianNote = isVegetarian ? ' This person follows a VEGETARIAN diet, so exclude all non-vegetarian categories like meat, fish, poultry, and their derivatives.' : '';
     
-    const prompt = `Generate 6-8 grocery ingredient categories for someone living in ${country} who prefers ${cuisines.join(', ')} cuisine(s).${vegetarianNote}
+    const prompt = `Generate 6-8 grocery ingredient categories for someone living in ${locationText} who prefers ${cuisines.join(', ')} cuisine(s).${vegetarianNote}
 
 Return ONLY a JSON array of category objects with this exact format:
 [
@@ -29,7 +33,17 @@ Return ONLY a JSON array of category objects with this exact format:
   }
 ]
 
-Make categories relevant to ${country} and ${cuisines.join(', ')} cuisine preferences. Include both staples and specialty items for those cuisines.${isVegetarian ? ' Focus on vegetarian ingredients only - no meat, fish, or poultry categories.' : ''}
+IMPORTANT: The location (${locationText}) should influence:
+- Locally available produce and seasonal ingredients
+- Regional specialty items commonly found in local markets
+- Traditional ingredients specific to that area
+
+The cuisines (${cuisines.join(', ')}) should influence:
+- Spices and seasonings typical to these cooking styles
+- Staple ingredients used in these cuisines
+- Specialty items needed for authentic recipes
+
+Make categories practical and region-specific for ${locationText}.${isVegetarian ? ' Focus on vegetarian ingredients only - no meat, fish, or poultry categories.' : ''}
 
 Examples:
 - For Indian: Pulses & Lentils, Spices & Seasonings, Flours & Grains, etc.

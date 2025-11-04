@@ -3,8 +3,16 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 
+export interface UserLocation {
+  city?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  isAutoDetected?: boolean;
+}
+
 export interface UserPreferences {
-  country: string;
+  location: UserLocation;
   cuisines: string[];
   isVegetarian: boolean;
   budget?: number;

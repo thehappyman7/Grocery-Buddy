@@ -3,10 +3,11 @@ import { useGrocery } from '@/context/GroceryContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Settings, Leaf, DollarSign, Plus } from 'lucide-react';
+import { Loader2, Settings, Leaf, DollarSign, Plus, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import type { UserLocation } from '@/context/PreferencesContext';
 
 interface DynamicCategory {
   name: string;
@@ -15,7 +16,7 @@ interface DynamicCategory {
 }
 
 interface DynamicCategoryBrowserProps {
-  country: string;
+  location: UserLocation;
   cuisines: string[];
   isVegetarian: boolean;
   budget?: number;
@@ -23,7 +24,7 @@ interface DynamicCategoryBrowserProps {
 }
 
 const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({ 
-  country, 
+  location, 
   cuisines, 
   isVegetarian,
   budget,
@@ -40,7 +41,7 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
   useEffect(() => {
     generateCategories();
-  }, [country, cuisines, isVegetarian]);
+  }, [location, cuisines, isVegetarian]);
 
   useEffect(() => {
     if (budget) {
@@ -66,7 +67,7 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
       setLoading(true);
       
       const { data, error } = await supabase.functions.invoke('generate-categories', {
-        body: { country, cuisines, isVegetarian, budget }
+        body: { location, cuisines, isVegetarian, budget }
       });
 
       if (error) throw error;
@@ -136,13 +137,21 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
   };
 
   if (loading) {
+    const locationText = location.city 
+      ? `${location.city}, ${location.country}` 
+      : location.country || 'your location';
+    
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating categories for {country} and {cuisines.join(', ')} cuisine...</span>
+        <span className="ml-2 text-muted-foreground">Generating categories for {locationText} and {cuisines.join(', ')} cuisine...</span>
       </div>
     );
   }
+
+  const locationText = location.city 
+    ? `${location.city}, ${location.country}` 
+    : location.country || 'Your Location';
 
   return (
     <div className="space-y-6">
@@ -160,8 +169,16 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
               Change Preferences
             </Button>
           </CardTitle>
-          <div className="text-sm text-primary-foreground/80 space-y-1">
-            <p>Categories for {country} • {cuisines.join(', ')} cuisine</p>
+          <div className="text-sm text-primary-foreground/80 space-y-2">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span className="font-medium">Location:</span>
+              <span>{locationText}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Cuisines:</span>
+              <span>{cuisines.join(', ')}</span>
+            </div>
             <div className="flex items-center gap-4 text-xs">
               {isVegetarian && (
                 <span className="flex items-center gap-1 bg-green-600/20 px-2 py-1 rounded">
@@ -171,7 +188,7 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
               )}
               {budget && (
                 <span className="flex items-center gap-1 bg-blue-600/20 px-2 py-1 rounded">
-                  <DollarSign className="h-3 w-3" />
+                  <DollarSign className="h-3 w-4" />
                   Budget: ${budget}/week
                 </span>
               )}

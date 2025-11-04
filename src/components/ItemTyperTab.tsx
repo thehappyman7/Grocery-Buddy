@@ -17,8 +17,8 @@ const ItemTyperTab = () => {
     setShowAddForm(!showAddForm);
   };
 
-  const handlePreferencesSet = (country: string, cuisines: string[], isVegetarian: boolean, budget?: number) => {
-    const newPreferences = { country, cuisines, isVegetarian, budget };
+  const handlePreferencesSet = (location: any, cuisines: string[], isVegetarian: boolean, budget?: number) => {
+    const newPreferences = { location, cuisines, isVegetarian, budget };
     setPreferences(newPreferences);
     setShowPreferences(false);
   };
@@ -87,7 +87,7 @@ const ItemTyperTab = () => {
           />
         ) : (
           <DynamicCategoryBrowser
-            country={preferences.country}
+            location={preferences.location}
             cuisines={preferences.cuisines}
             isVegetarian={preferences.isVegetarian}
             budget={preferences.budget}
