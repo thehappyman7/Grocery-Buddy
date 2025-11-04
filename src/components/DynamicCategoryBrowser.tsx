@@ -73,7 +73,6 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
       setCategories(data.categories || []);
     } catch (error) {
-      console.error('Error generating categories:', error);
       // Fallback categories if AI fails
       setCategories([
         { name: 'Staples & Grains', description: 'Essential grains and basic ingredients', color: 'grocery-orange' },
@@ -117,7 +116,6 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching category ingredients:', error);
       toast({
         title: "Error",
         description: "Couldn't load ingredients for this category. Please try again.",

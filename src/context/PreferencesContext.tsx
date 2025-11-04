@@ -30,7 +30,6 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
       try {
         return JSON.parse(savedPreferences);
       } catch (error) {
-        console.error("Error parsing preferences from localStorage:", error);
         return null;
       }
     }
@@ -74,10 +73,10 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
         });
 
       if (error) {
-        console.error('Preferences sync error:', error);
+        // Silent error handling
       }
     } catch (error) {
-      console.error('Preferences cloud sync failed:', error);
+      // Silent error handling
     }
   };
 
@@ -101,7 +100,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
         localStorage.setItem('groceryBuddyPreferences', JSON.stringify(cloudPreferences));
       }
     } catch (error) {
-      console.error('Failed to load preferences from cloud:', error);
+      // Silent error handling
     }
   };
 

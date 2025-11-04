@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error('Error fetching session:', error);
         return;
       }
       
@@ -51,8 +50,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
-      
       if (event === 'SIGNED_IN' && session) {
         const userData = session.user;
         setUser({
@@ -100,7 +97,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       toast.success('Check your email for the login link!');
     } catch (error) {
-      console.error('Error logging in:', error);
       toast.error('Failed to log in. Please try again.');
     }
   };
@@ -142,13 +138,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       if (error) {
-        console.error('Google auth error details:', error);
         throw error;
       }
-      
-      console.log("Google Auth Response:", data);
     } catch (error: any) {
-      console.error('Error logging in with Google:', error);
       toast.error(error?.message || 'Failed to log in with Google. Please try again.');
     }
   };
@@ -171,7 +163,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw error;
       }
     } catch (error) {
-      console.error('Error logging out:', error);
       toast.error('Failed to log out. Please try again.');
     }
   };

@@ -125,7 +125,6 @@ export const SyncProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       toast.success('Data synced successfully');
     } catch (error) {
-      console.error('Sync failed:', error);
       toast.error('Sync failed. Data saved locally.');
     } finally {
       setIsSyncing(false);

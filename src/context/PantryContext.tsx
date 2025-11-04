@@ -32,7 +32,6 @@ export const PantryProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       try {
         return JSON.parse(savedItems);
       } catch (error) {
-        console.error("Error parsing pantry items from localStorage:", error);
         return [];
       }
     }
@@ -120,7 +119,7 @@ export const PantryProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setPantryItems(cloudItems);
       }
     } catch (error) {
-      console.error('Failed to load pantry from cloud:', error);
+      // Silent error handling
     }
   };
 

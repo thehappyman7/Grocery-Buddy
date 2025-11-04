@@ -55,7 +55,6 @@ const AIRecipeSuggestions: React.FC<AIRecipeSuggestionsProps> = ({ selectedIngre
 
       setRecipes(data?.recipes || []);
     } catch (err) {
-      console.error(`Error fetching ${type} recipes:`, err);
       toast.error(`Failed to generate ${type} recipes. Please try again.`);
     } finally {
       setLoading(false);

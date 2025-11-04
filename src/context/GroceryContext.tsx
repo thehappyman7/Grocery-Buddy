@@ -47,7 +47,6 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
         // No longer filtering out any categories
         return parsedItems;
       } catch (error) {
-        console.error("Error parsing grocery items from localStorage:", error);
         return initialGroceryItems;
       }
     }
@@ -129,7 +128,7 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
         setGroceryItems(cloudItems);
       }
     } catch (error) {
-      console.error('Failed to load from cloud:', error);
+      // Silent error handling
     }
   };
 

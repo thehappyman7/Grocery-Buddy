@@ -42,13 +42,9 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
       // Clean up existing auth state before login
       cleanupAuthState();
       
-      // Log for debugging
-      console.log("Starting Google login process...");
-      
       await loginWithGoogle();
       // Dialog will close automatically when user returns from Google OAuth flow
     } catch (error) {
-      console.error("Google login error:", error);
       setIsLoading(false);
     }
   };

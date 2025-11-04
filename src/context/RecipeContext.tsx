@@ -33,7 +33,6 @@ export const RecipeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       try {
         return JSON.parse(savedItems);
       } catch (error) {
-        console.error("Error parsing saved recipes from localStorage:", error);
         return [];
       }
     }
@@ -123,7 +122,7 @@ export const RecipeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setSavedRecipes(cloudRecipes);
       }
     } catch (error) {
-      console.error('Failed to load saved recipes from cloud:', error);
+      // Silent error handling
     }
   };
 
