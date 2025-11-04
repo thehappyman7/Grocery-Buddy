@@ -25,9 +25,9 @@ serve(async (req) => {
 
   try {
     const { type, filters, category, userIngredients = [], excludeRecipeIds = [] }: RecipeRequest = await req.json();
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!geminiApiKey) {
+    if (!lovableApiKey) {
       throw new Error('AI service not configured');
     }
 
@@ -56,56 +56,56 @@ serve(async (req) => {
         prompt = `Give me 5 recipes in the category "${category}" for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
         break;
       case 'ingredients':
-        prompt = `List exactly 10 common grocery ingredients that belong to the category "${category}".
+        const vegetarianClause = filters.isVegetarian 
+          ? ' CRITICAL: Return ONLY VEGETARIAN ingredients. Exclude all meat, poultry, fish, seafood, and animal-derived products except dairy and eggs.'
+          : '';
+        
+        prompt = `List exactly 10 common grocery ingredients that belong to the category "${category}" for ${cuisineFilter}.${vegetarianClause}
 
 CRITICAL INSTRUCTIONS:
 - ONLY return a JSON array of short ingredient names (strings). Example: ["Turmeric","Cumin","Coriander","Cardamom","Black Pepper","Cinnamon","Cloves","Nutmeg","Bay Leaves","Mustard Seeds"]
 - DO NOT return recipes, instructions, quantities, or extra text.
 - DO NOT include measurements, units, or parenthetical descriptions.
-- If you cannot confidently produce 10 items, return as many correct items as you can in the same JSON array.
+- Each ingredient name should be concise (1-3 words maximum).
+- All ingredients must be real, commonly available grocery items.
+${filters.isVegetarian ? '- ABSOLUTELY NO meat, poultry, fish, seafood, or their derivatives.' : ''}
 
 Return ONLY the JSON array, nothing else.`;
         
         try {
-          const ingredientsResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+          const ingredientsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
             headers: {
+              'Authorization': `Bearer ${lovableApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: prompt
-                }]
-              }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1000
-              }
+              model: 'google/gemini-2.5-flash',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a grocery shopping assistant. Always return valid JSON arrays of ingredient names only.'
+                },
+                {
+                  role: 'user',
+                  content: prompt
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 1000
             })
           });
 
           if (!ingredientsResponse.ok) {
-            const fallbackIngredients = getFallbackIngredients(category || 'general');
-            return new Response(JSON.stringify({ 
-              ingredients: fallbackIngredients,
-              source: 'fallback'
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+            const errorText = await ingredientsResponse.text();
+            throw new Error(`AI request failed: ${errorText}`);
           }
 
           const ingredientsData = await ingredientsResponse.json();
-          const ingredientsText = ingredientsData.candidates?.[0]?.content?.parts?.[0]?.text;
+          const ingredientsText = ingredientsData.choices?.[0]?.message?.content;
           
           if (!ingredientsText) {
-            const fallbackIngredients = getFallbackIngredients(category || 'general');
-            return new Response(JSON.stringify({ 
-              ingredients: fallbackIngredients,
-              source: 'fallback'
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+            throw new Error('No response from AI service');
           }
           
           let ingredients: string[];
@@ -118,6 +118,10 @@ Return ONLY the JSON array, nothing else.`;
                 .filter((item: any) => typeof item === 'string')
                 .map((item: string) => item.trim())
                 .filter((item: string) => item.length > 0 && item.length < 50);
+              
+              if (ingredients.length === 0) {
+                throw new Error('No valid ingredients in response');
+              }
             } else {
               throw new Error('Response is not an array');
             }
@@ -135,23 +139,22 @@ Return ONLY the JSON array, nothing else.`;
             }
             
             if (ingredients.length === 0) {
-              ingredients = getFallbackIngredients(category || 'general');
+              throw new Error('Could not parse ingredients from response');
             }
           }
 
           return new Response(JSON.stringify({ 
             ingredients,
-            source: 'gemini'
+            source: 'lovable-ai'
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } catch (error) {
-          const fallbackIngredients = getFallbackIngredients(category || 'general');
-          
           return new Response(JSON.stringify({ 
-            ingredients: fallbackIngredients,
-            source: 'fallback'
+            error: 'Could not load ingredients. Please try again later.',
+            ingredients: []
           }), {
+            status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
@@ -190,35 +193,49 @@ ${ingredientMatchClause}
 
 Return only the JSON array, no other text.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4000
-        }
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a recipe assistant. Always return valid JSON arrays of recipe objects.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000
       })
     });
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ recipes: [] }), {
+      const errorText = await response.text();
+      return new Response(JSON.stringify({ 
+        error: 'Could not generate recipes. Please try again.',
+        recipes: [] 
+      }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const generatedText = data.choices?.[0]?.message?.content;
     
     if (!generatedText) {
-      return new Response(JSON.stringify({ recipes: [] }), {
+      return new Response(JSON.stringify({ 
+        error: 'No recipes generated. Please try again.',
+        recipes: [] 
+      }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -231,7 +248,11 @@ Return only the JSON array, no other text.`;
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ recipes: [] }), {
+    return new Response(JSON.stringify({ 
+      error: 'Service error. Please try again.',
+      recipes: [] 
+    }), {
+      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
@@ -243,39 +264,4 @@ function getCurrentSeason(): string {
   if (month >= 6 && month <= 8) return 'summer';
   if (month >= 9 && month <= 11) return 'autumn';
   return 'winter';
-}
-
-function getFallbackIngredients(category: string): string[] {
-  const fallbacks: Record<string, string[]> = {
-    'Spices & Seasonings': [
-      'Turmeric', 'Cumin', 'Coriander', 'Black Pepper', 'Red Chili Powder',
-      'Garam Masala', 'Cardamom', 'Cinnamon', 'Cloves', 'Bay Leaves'
-    ],
-    'Vegetables & Herbs': [
-      'Tomatoes', 'Onions', 'Garlic', 'Ginger', 'Green Chilies',
-      'Cilantro', 'Curry Leaves', 'Potatoes', 'Cauliflower', 'Spinach'
-    ],
-    'Staples & Grains': [
-      'Rice', 'Wheat Flour', 'Lentils', 'Chickpeas', 'Basmati Rice',
-      'All-Purpose Flour', 'Semolina', 'Rice Flour', 'Red Lentils', 'Split Peas'
-    ],
-    'Dairy & Proteins': [
-      'Milk', 'Yogurt', 'Paneer', 'Eggs', 'Butter',
-      'Ghee', 'Cream', 'Cheese', 'Chicken', 'Fish'
-    ],
-    'Oils & Condiments': [
-      'Vegetable Oil', 'Mustard Oil', 'Olive Oil', 'Sesame Oil', 'Coconut Oil',
-      'Salt', 'Sugar', 'Vinegar', 'Soy Sauce', 'Tamarind Paste'
-    ],
-    'Snacks & Beverages': [
-      'Tea', 'Coffee', 'Biscuits', 'Chips', 'Nuts',
-      'Dried Fruits', 'Cookies', 'Instant Noodles', 'Juice', 'Soft Drinks'
-    ],
-    'general': [
-      'Rice', 'Flour', 'Oil', 'Salt', 'Sugar',
-      'Onions', 'Tomatoes', 'Garlic', 'Ginger', 'Potatoes'
-    ]
-  };
-  
-  return fallbacks[category] || fallbacks['general'];
 }

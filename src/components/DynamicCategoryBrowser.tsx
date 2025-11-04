@@ -104,17 +104,22 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
       if (error) throw error;
 
-      if (data?.ingredients) {
+      if (data?.error) {
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive",
+        });
+        setIngredients([]);
+      } else if (data?.ingredients && Array.isArray(data.ingredients)) {
         setIngredients(data.ingredients);
-        
-        // Show a subtle message if using fallback ingredients
-        if (data.source === 'fallback' && data.message) {
-          toast({
-            title: "Using default ingredients",
-            description: data.message,
-            variant: "default",
-          });
-        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Couldn't load ingredients for this category. Please try again.",
+          variant: "destructive",
+        });
+        setIngredients([]);
       }
     } catch (error) {
       toast({
