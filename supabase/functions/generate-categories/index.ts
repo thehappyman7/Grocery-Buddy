@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,25 +52,44 @@ Examples:
 
 Return ONLY the JSON array, no other text.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800
-        }
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 800
       }),
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: "Rate limit exceeded. Please try again in a moment.",
+          categories: [] 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ 
+          error: "AI credits exhausted. Please add credits to continue.",
+          categories: [] 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       return new Response(JSON.stringify({ categories: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -78,13 +97,13 @@ Return ONLY the JSON array, no other text.`;
 
     const data = await response.json();
     
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    if (!data.choices?.[0]?.message?.content) {
       return new Response(JSON.stringify({ categories: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     
-    const categoriesText = data.candidates[0].content.parts[0].text;
+    const categoriesText = data.choices[0].message.content;
     const cleanedJson = categoriesText.replace(/```json\n?|\n?```/g, '').trim();
     const categories = JSON.parse(cleanedJson);
 

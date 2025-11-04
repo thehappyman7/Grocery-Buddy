@@ -65,6 +65,8 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
   const generateCategories = async () => {
     try {
       setLoading(true);
+      setCategories([]); // Clear existing categories
+      setSelectedCategory(''); // Clear selection
       
       const { data, error } = await supabase.functions.invoke('generate-categories', {
         body: { location, cuisines, isVegetarian, budget }
@@ -72,8 +74,24 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
       if (error) throw error;
 
-      setCategories(data.categories || []);
+      if (data?.error) {
+        toast({
+          title: "Error loading categories",
+          description: data.error,
+          variant: "destructive",
+        });
+        setCategories([]);
+      } else if (data?.categories && Array.isArray(data.categories)) {
+        setCategories(data.categories);
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (error) {
+      toast({
+        title: "Error loading categories",
+        description: "Couldn't load categories. Please try again.",
+        variant: "destructive",
+      });
       // Fallback categories if AI fails
       setCategories([
         { name: 'Staples & Grains', description: 'Essential grains and basic ingredients', color: 'grocery-orange' },
@@ -234,11 +252,26 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
               <SelectTrigger className="border-border hover:border-primary transition-colors">
                 <SelectValue placeholder="Choose a category..." />
               </SelectTrigger>
-              <SelectContent className="bg-popover border border-border shadow-xl z-50 rounded-lg">
-                {categories.map((category) => (
-                  <SelectItem key={category.name} value={category.name} className="hover:bg-accent">
+              <SelectContent className="bg-popover border-2 border-border shadow-2xl z-[100] rounded-lg max-h-[400px] overflow-y-auto">
+                {loading && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                    <span className="text-sm">Fetching options...</span>
+                  </div>
+                )}
+                {!loading && categories.length === 0 && (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    No categories available. Try changing your preferences.
+                  </div>
+                )}
+                {!loading && categories.map((category) => (
+                  <SelectItem 
+                    key={category.name} 
+                    value={category.name} 
+                    className="hover:bg-accent focus:bg-accent cursor-pointer py-3"
+                  >
                     <div>
-                      <div className="font-medium">{category.name}</div>
+                      <div className="font-medium text-foreground">{category.name}</div>
                       <div className="text-xs text-muted-foreground">{category.description}</div>
                     </div>
                   </SelectItem>
