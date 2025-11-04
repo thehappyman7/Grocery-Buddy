@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -25,10 +27,9 @@ serve(async (req) => {
 
   try {
     const { type, filters, category, userIngredients = [], excludeRecipeIds = [] }: RecipeRequest = await req.json();
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!lovableApiKey) {
-      throw new Error('AI service not configured');
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not configured');
     }
 
     // Build prompt based on request type
@@ -73,36 +74,31 @@ ${filters.isVegetarian ? '- ABSOLUTELY NO meat, poultry, fish, seafood, or their
 Return ONLY the JSON array, nothing else.`;
         
         try {
-          const ingredientsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const ingredientsResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${lovableApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                {
-                  role: 'system',
-                  content: 'You are a grocery shopping assistant. Always return valid JSON arrays of ingredient names only.'
-                },
-                {
-                  role: 'user',
-                  content: prompt
-                }
-              ],
-              temperature: 0.7,
-              max_tokens: 1000
+              contents: [{
+                parts: [{
+                  text: prompt
+                }]
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1000
+              }
             })
           });
 
           if (!ingredientsResponse.ok) {
             const errorText = await ingredientsResponse.text();
-            throw new Error(`AI request failed: ${errorText}`);
+            throw new Error(`Gemini API request failed: ${errorText}`);
           }
 
           const ingredientsData = await ingredientsResponse.json();
-          const ingredientsText = ingredientsData.choices?.[0]?.message?.content;
+          const ingredientsText = ingredientsData.candidates?.[0]?.content?.parts?.[0]?.text;
           
           if (!ingredientsText) {
             throw new Error('No response from AI service');
@@ -145,7 +141,7 @@ Return ONLY the JSON array, nothing else.`;
 
           return new Response(JSON.stringify({ 
             ingredients,
-            source: 'lovable-ai'
+            source: 'google-gemini'
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -193,26 +189,21 @@ ${ingredientMatchClause}
 
 Return only the JSON array, no other text.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a recipe assistant. Always return valid JSON arrays of recipe objects.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 4000
+        }
       })
     });
 
@@ -228,7 +219,7 @@ Return only the JSON array, no other text.`;
     }
 
     const data = await response.json();
-    const generatedText = data.choices?.[0]?.message?.content;
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!generatedText) {
       return new Response(JSON.stringify({ 

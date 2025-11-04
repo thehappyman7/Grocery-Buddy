@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,58 +52,44 @@ Examples:
 
 Return ONLY the JSON array, no other text.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 800
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800
+        }
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          error: "Rate limit exceeded. Please try again in a moment.",
-          categories: [] 
-        }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: "AI credits exhausted. Please add credits to continue.",
-          categories: [] 
-        }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      return new Response(JSON.stringify({ categories: [] }), {
+      const errorText = await response.text();
+      return new Response(JSON.stringify({ 
+        error: "Failed to generate categories. Please try again.",
+        categories: [] 
+      }), {
+        status: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const data = await response.json();
     
-    if (!data.choices?.[0]?.message?.content) {
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       return new Response(JSON.stringify({ categories: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     
-    const categoriesText = data.choices[0].message.content;
+    const categoriesText = data.candidates[0].content.parts[0].text;
     const cleanedJson = categoriesText.replace(/```json\n?|\n?```/g, '').trim();
     const categories = JSON.parse(cleanedJson);
 
