@@ -40,18 +40,18 @@ serve(async (req) => {
     const currentSeason = getCurrentSeason();
 
     const userIngredientsClause = userIngredients.length > 0 
-      ? `Prioritize recipes using these available ingredients: ${userIngredients.join(', ')}. If not enough ingredients for a complete recipe, suggest recipes requiring minimal extra ingredients beyond this list.`
+      ? `Suggest recipes that can be made using SUBSETS of the following ingredients: ${userIngredients.join(', ')}. Each recipe should use SOME OR MOST of the listed ingredients, but NOT necessarily all of them. Recipes can also include a few common pantry staples not in the list.`
       : '';
     
     switch (type) {
       case 'quick':
-        prompt = `Give me 5 quick recipes that can be prepared under 20 minutes for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} List only ingredient names (no measurements).`;
+        prompt = `Generate exactly 5 quick recipes (under 20 minutes prep time) for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} Ensure variety in the recipes - different cooking methods and flavor profiles. List only ingredient names (no measurements).`;
         break;
       case 'trending':
-        prompt = `Give me 5 currently trending grocery recipes for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} List only ingredient names (no measurements).`;
+        prompt = `Generate exactly 5 currently trending recipes for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} Ensure each recipe is distinct and uses different combinations of the available ingredients. List only ingredient names (no measurements).`;
         break;
       case 'seasonal':
-        prompt = `Give me 5 seasonal recipes based on currently available vegetables and fruits for ${currentMonth} (${currentSeason} season), ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} List only ingredient names (no measurements).`;
+        prompt = `Generate exactly 5 seasonal recipes featuring ${currentMonth} (${currentSeason} season) produce for ${dietaryRestriction} diet and ${cuisineFilter}. ${userIngredientsClause} Each recipe should highlight different seasonal ingredients and cooking styles. List only ingredient names (no measurements).`;
         break;
       case 'category':
         prompt = `Give me 5 recipes in the category "${category}" for ${dietaryRestriction} diet and ${cuisineFilter}. List only ingredient names (no measurements).`;
