@@ -40,7 +40,9 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    generateCategories();
+    if (location) {
+      generateCategories();
+    }
   }, [location, cuisines, isVegetarian]);
 
   useEffect(() => {
@@ -159,10 +161,24 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
     });
   };
 
+  // Handle missing location data
+  if (!location) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <MapPin className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">Please set your location preferences to browse categories</p>
+        <Button onClick={onChangePreferences} variant="default">
+          <Settings className="h-4 w-4 mr-2" />
+          Set Preferences
+        </Button>
+      </div>
+    );
+  }
+
   if (loading) {
-    const locationText = location.city 
-      ? `${location.city}, ${location.country}` 
-      : location.country || 'your location';
+    const locationText = location?.city 
+      ? `${location.city}, ${location.country || ''}` 
+      : location?.country || 'your location';
     
     return (
       <div className="flex items-center justify-center py-12">
@@ -172,9 +188,9 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
     );
   }
 
-  const locationText = location.city 
-    ? `${location.city}, ${location.country}` 
-    : location.country || 'Your Location';
+  const locationText = location?.city 
+    ? `${location.city}, ${location.country || ''}` 
+    : location?.country || 'Your Location';
 
   return (
     <div className="space-y-6">
