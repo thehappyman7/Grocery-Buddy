@@ -47,10 +47,9 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
   useEffect(() => {
     if (budget) {
-      // Calculate total spent from current items (mock prices for demo)
+      // Calculate total spent from current items using their consistent prices
       const spent = groceryItems.reduce((total, item) => {
-        const mockPrice = Math.random() * 10 + 2; // $2-12 range
-        return total + mockPrice;
+        return total + (item.price || 0);
       }, 0);
       setTotalSpent(spent);
     }

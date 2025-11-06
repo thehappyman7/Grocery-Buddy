@@ -12,6 +12,19 @@ export interface GroceryItem {
   category: string;
   selected: boolean;
   quantity: string;
+  price: number;
+}
+
+// Generate consistent price based on item name (same item = same price)
+const generateConsistentPrice = (itemName: string): number => {
+  let hash = 0;
+  for (let i = 0; i < itemName.length; i++) {
+    hash = ((hash << 5) - hash) + itemName.charCodeAt(i);
+    hash = hash & hash;
+  }
+  // Generate price between $2-12 based on hash
+  const price = 2 + (Math.abs(hash) % 1000) / 100;
+  return Math.round(price * 100) / 100;
 }
 
 // Initial empty grocery items array
@@ -88,6 +101,7 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
             category: item.category,
             selected: item.selected,
             quantity: item.quantity || '',
+            price: item.price,
             local_id: item.id,
             device_id: deviceId,
             is_deleted: false
@@ -122,7 +136,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
           name: item.name,
           category: item.category,
           selected: item.selected,
-          quantity: item.quantity || ''
+          quantity: item.quantity || '',
+          price: item.price || generateConsistentPrice(item.name)
         }));
 
         setGroceryItems(cloudItems);
@@ -183,7 +198,8 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
       name,
       category,
       selected: false,
-      quantity: ''
+      quantity: '',
+      price: generateConsistentPrice(name)
     };
     
     setGroceryItems(prevItems => [...prevItems, newItem]);
