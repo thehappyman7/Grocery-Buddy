@@ -57,8 +57,12 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (savedItems) {
       try {
         const parsedItems = JSON.parse(savedItems);
-        // No longer filtering out any categories
-        return parsedItems;
+        // Migrate old items to include price field
+        const migratedItems = parsedItems.map((item: any) => ({
+          ...item,
+          price: item.price || generateConsistentPrice(item.name)
+        }));
+        return migratedItems;
       } catch (error) {
         return initialGroceryItems;
       }
@@ -137,7 +141,7 @@ export const GroceryProvider: React.FC<{ children: ReactNode }> = ({ children })
           category: item.category,
           selected: item.selected,
           quantity: item.quantity || '',
-          price: item.price || generateConsistentPrice(item.name)
+          price: (item as any).price || generateConsistentPrice(item.name)
         }));
 
         setGroceryItems(cloudItems);

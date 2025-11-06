@@ -23,6 +23,7 @@ export type Database = {
           is_deleted: boolean
           local_id: number | null
           name: string
+          price: number | null
           quantity: string | null
           selected: boolean
           updated_at: string
@@ -36,6 +37,7 @@ export type Database = {
           is_deleted?: boolean
           local_id?: number | null
           name: string
+          price?: number | null
           quantity?: string | null
           selected?: boolean
           updated_at?: string
@@ -49,6 +51,7 @@ export type Database = {
           is_deleted?: boolean
           local_id?: number | null
           name?: string
+          price?: number | null
           quantity?: string | null
           selected?: boolean
           updated_at?: string
