@@ -10,7 +10,7 @@ const Index = () => {
   return (
     <GroceryProvider>
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-muted/20 via-background to-accent/10 overflow-x-hidden">
-        <main className="flex-grow pt-4 sm:pt-6 pb-4 sm:pb-8 w-full">
+        <main className="flex-grow pb-4 sm:pb-8 w-full">
           <div className="container mx-auto px-3 sm:px-4 max-w-4xl bg-background/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-border p-4 sm:p-6 md:p-8 overflow-x-hidden">
             <Header />
             
