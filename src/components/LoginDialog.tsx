@@ -55,7 +55,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
         <DialogHeader>
           <DialogTitle>Sign in</DialogTitle>
           <DialogDescription>
-            Sign in to continue using GroceryBuddy
+            Sign in to continue using Aura Grocer
           </DialogDescription>
         </DialogHeader>
         

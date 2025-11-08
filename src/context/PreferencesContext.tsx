@@ -33,7 +33,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
   const { user, isAuthenticated } = useAuth();
   
   const [preferences, setPreferencesState] = useState<UserPreferences | null>(() => {
-    const savedPreferences = localStorage.getItem('groceryBuddyPreferences');
+    const savedPreferences = localStorage.getItem('auraGrocerPreferences');
     if (savedPreferences) {
       try {
         return JSON.parse(savedPreferences);
@@ -47,7 +47,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Save to localStorage and sync to cloud when preferences change
   useEffect(() => {
     if (preferences) {
-      localStorage.setItem('groceryBuddyPreferences', JSON.stringify(preferences));
+      localStorage.setItem('auraGrocerPreferences', JSON.stringify(preferences));
       
       if (isAuthenticated && user && navigator.onLine) {
         syncToCloud();
@@ -105,7 +105,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
       if (data?.preferences) {
         const cloudPreferences = data.preferences as unknown as UserPreferences;
         setPreferencesState(cloudPreferences);
-        localStorage.setItem('groceryBuddyPreferences', JSON.stringify(cloudPreferences));
+        localStorage.setItem('auraGrocerPreferences', JSON.stringify(cloudPreferences));
       }
     } catch (error) {
       // Silent error handling

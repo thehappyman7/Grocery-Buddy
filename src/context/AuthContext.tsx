@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('groceryItems');
         localStorage.removeItem('pantryItems');
         localStorage.removeItem('savedRecipes');
-        localStorage.removeItem('groceryBuddyPreferences');
+        localStorage.removeItem('auraGrocerPreferences');
         localStorage.removeItem('lastSyncTime');
         toast.info('You have been logged out');
       }
@@ -154,7 +154,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('groceryItems');
       localStorage.removeItem('pantryItems');
       localStorage.removeItem('savedRecipes');
-      localStorage.removeItem('groceryBuddyPreferences');
+      localStorage.removeItem('auraGrocerPreferences');
       localStorage.removeItem('lastSyncTime');
       
       const { error } = await supabase.auth.signOut();

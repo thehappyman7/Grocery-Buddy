@@ -29,7 +29,7 @@ const Navigation: React.FC = () => {
               <div className="p-1.5 sm:p-2 bg-grocery-purple/10 rounded-full">
                 <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-grocery-purple" />
               </div>
-              <span className="text-xl sm:text-2xl font-bold font-primary text-gray-800 tracking-tight">GroceryBuddy</span>
+              <span className="text-xl sm:text-2xl font-bold font-primary text-gray-800 tracking-tight">Aura Grocer</span>
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
