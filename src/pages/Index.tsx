@@ -10,10 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const Index = () => {
   return (
     <GroceryProvider>
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-muted/20 via-background to-accent/10">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-muted/20 via-background to-accent/10 overflow-x-hidden">
         <Navigation />
-        <main className="flex-grow py-4 sm:py-8">
-          <div className="container mx-auto px-3 sm:px-4 max-w-4xl bg-background/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-border p-4 sm:p-6 md:p-8">
+        <main className="flex-grow py-4 sm:py-8 w-full">
+          <div className="container mx-auto px-3 sm:px-4 max-w-4xl bg-background/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-border p-4 sm:p-6 md:p-8 overflow-x-hidden">
             <Header />
             
             <Tabs defaultValue="add-items" className="mt-4 sm:mt-6">
