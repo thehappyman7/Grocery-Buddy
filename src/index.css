@@ -4,107 +4,107 @@
 
 @layer base {
   :root {
-    /* Extra Gentle Design System for Light Mode */
-    --background: 240 20% 94%;
-    --foreground: 240 15% 25%;
+    /* Aura Grocer Design System for Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 13%;
 
-    --card: 240 20% 95%;
-    --card-foreground: 240 15% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
 
-    --popover: 240 20% 94%;
-    --popover-foreground: 240 15% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
 
-    --primary: 280 45% 50%;
+    --primary: 122 39% 49%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 30% 75%;
-    --secondary-foreground: 200 30% 35%;
+    --secondary: 45 100% 51%;
+    --secondary-foreground: 0 0% 13%;
 
-    --muted: 210 25% 88%;
-    --muted-foreground: 210 20% 55%;
+    --muted: 125 38% 93%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 45 35% 70%;
-    --accent-foreground: 45 30% 35%;
+    --accent: 125 38% 93%;
+    --accent-foreground: 0 0% 13%;
 
-    --destructive: 0 50% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 80%;
-    --input: 220 15% 85%;
-    --ring: 280 45% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 122 39% 49%;
 
     --radius: 0.75rem;
 
-    /* Custom Grocery Colors - Very soft tones */
-    --grocery-purple: 280 45% 50%;
-    --grocery-purple-light: 280 25% 88%;
-    --grocery-green: 140 40% 45%;
-    --grocery-green-light: 140 25% 82%;
-    --grocery-blue: 200 45% 55%;
-    --grocery-blue-light: 200 25% 82%;
-    --grocery-orange: 25 55% 60%;
-    --grocery-orange-light: 25 35% 82%;
+    /* Aura Grocer Custom Colors - Light Mode */
+    --grocery-purple: 122 39% 49%;
+    --grocery-purple-light: 125 38% 93%;
+    --grocery-green: 122 39% 49%;
+    --grocery-green-light: 125 38% 93%;
+    --grocery-blue: 122 39% 49%;
+    --grocery-blue-light: 125 38% 93%;
+    --grocery-orange: 45 100% 51%;
+    --grocery-orange-light: 45 100% 90%;
     
     /* Font Family */
     --font-primary: 'Inter', system-ui, sans-serif;
 
-    --sidebar-background: 240 20% 94%;
-    --sidebar-foreground: 240 15% 30%;
-    --sidebar-primary: 280 45% 50%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 200 30% 75%;
-    --sidebar-accent-foreground: 200 30% 35%;
-    --sidebar-border: 220 15% 80%;
-    --sidebar-ring: 280 45% 50%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 13%;
+    --sidebar-primary: 122 39% 49%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 125 38% 93%;
+    --sidebar-accent-foreground: 0 0% 13%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 122 39% 49%;
   }
 
   .dark {
-    --background: 210 20% 8%;
-    --foreground: 210 20% 95%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 88%;
 
-    --card: 210 20% 10%;
-    --card-foreground: 210 20% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 88%;
 
-    --popover: 210 20% 10%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 88%;
 
-    --primary: 280 100% 70%;
+    --primary: 123 37% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 15%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 45 100% 65%;
+    --secondary-foreground: 0 0% 13%;
 
-    --muted: 210 20% 15%;
-    --muted-foreground: 210 20% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 45 100% 80%;
-    --accent-foreground: 45 30% 25%;
+    --accent: 123 55% 23%;
+    --accent-foreground: 0 0% 88%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 20%;
-    --input: 210 20% 15%;
-    --ring: 280 100% 70%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 123 37% 65%;
 
-    /* Custom Grocery Colors for Dark Mode */
-    --grocery-purple: 280 100% 70%;
-    --grocery-purple-light: 280 100% 25%;
-    --grocery-green: 140 60% 60%;
-    --grocery-green-light: 140 60% 25%;
-    --grocery-blue: 200 100% 70%;
-    --grocery-blue-light: 200 100% 25%;
-    --grocery-orange: 25 100% 75%;
-    --grocery-orange-light: 25 100% 25%;
+    /* Aura Grocer Custom Colors - Dark Mode */
+    --grocery-purple: 123 37% 65%;
+    --grocery-purple-light: 123 55% 23%;
+    --grocery-green: 123 37% 65%;
+    --grocery-green-light: 123 55% 23%;
+    --grocery-blue: 123 37% 65%;
+    --grocery-blue-light: 123 55% 23%;
+    --grocery-orange: 45 100% 65%;
+    --grocery-orange-light: 45 100% 30%;
 
-    --sidebar-background: 210 20% 8%;
-    --sidebar-foreground: 210 20% 95%;
-    --sidebar-primary: 280 100% 70%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 123 37% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 15%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 210 20% 20%;
-    --sidebar-ring: 280 100% 70%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 123 37% 65%;
   }
 }
 
