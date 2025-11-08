@@ -193,53 +193,53 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="border-border bg-card shadow-lg">
-        <CardHeader className="bg-primary rounded-t-lg">
-          <CardTitle className="text-lg text-primary-foreground flex items-center justify-between">
-            <span>Browse by Category</span>
+      <Card className="border-border bg-card shadow-lg overflow-x-hidden">
+        <CardHeader className="bg-primary rounded-t-lg p-3 sm:p-6">
+          <CardTitle className="text-base sm:text-lg text-primary-foreground flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+            <span className="truncate">Browse by Category</span>
             <Button
               variant="secondary"
               size="sm"
               onClick={onChangePreferences}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs sm:text-sm w-full sm:w-auto"
             >
-              <Settings className="h-4 w-4 mr-1" />
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
               Change Preferences
             </Button>
           </CardTitle>
-          <div className="text-sm text-primary-foreground/80 space-y-2">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
+          <div className="text-xs sm:text-sm text-primary-foreground/80 space-y-2 mt-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="font-medium">Location:</span>
-              <span>{locationText}</span>
+              <span className="truncate">{locationText}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-medium">Cuisines:</span>
-              <span>{cuisines.join(', ')}</span>
+              <span className="truncate">{cuisines.join(', ')}</span>
             </div>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-2 sm:gap-4 text-xs flex-wrap">
               {isVegetarian && (
-                <span className="flex items-center gap-1 bg-green-600/20 px-2 py-1 rounded">
+                <span className="flex items-center gap-1 bg-green-600/20 px-2 py-1 rounded shrink-0">
                   <Leaf className="h-3 w-3" />
                   Vegetarian Only
                 </span>
               )}
               {budget && (
-                <span className="flex items-center gap-1 bg-blue-600/20 px-2 py-1 rounded">
-                  <DollarSign className="h-3 w-4" />
+                <span className="flex items-center gap-1 bg-blue-600/20 px-2 py-1 rounded shrink-0">
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
                   Budget: ${budget}/week
                 </span>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 p-6">
+        <CardContent className="space-y-4 p-3 sm:p-6">
           {/* Budget Progress */}
           {budget && (
-            <div className="p-4 border rounded-lg bg-muted/30">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-primary">Weekly Budget Progress</span>
-                <span className={`text-sm font-semibold ${
+            <div className="p-3 sm:p-4 border rounded-lg bg-muted/30 overflow-x-hidden">
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <span className="text-xs sm:text-sm font-medium text-primary truncate">Weekly Budget Progress</span>
+                <span className={`text-xs sm:text-sm font-semibold shrink-0 ${
                   totalSpent > budget ? 'text-red-600' : 
                   totalSpent > budget * 0.8 ? 'text-yellow-600' : 'text-green-600'
                 }`}>
@@ -296,15 +296,15 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
           </div>
 
           {selectedCategory && loadingIngredients && (
-            <div className="animate-in slide-in-from-top-4 duration-300">
-              <h3 className="font-semibold mb-4 text-primary">
+            <div className="animate-in slide-in-from-top-4 duration-300 overflow-x-hidden">
+              <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 text-primary truncate">
                 Ingredients in {selectedCategory}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 {[...Array(10)].map((_, i) => (
-                  <Card key={i} className="p-4">
-                    <Skeleton className="h-6 w-full mb-2" />
-                    <Skeleton className="h-8 w-full" />
+                  <Card key={i} className="p-3 sm:p-4">
+                    <Skeleton className="h-5 sm:h-6 w-full mb-2" />
+                    <Skeleton className="h-7 sm:h-8 w-full" />
                   </Card>
                 ))}
               </div>
@@ -312,21 +312,21 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
           )}
 
           {selectedCategory && !loadingIngredients && ingredients.length > 0 && (
-            <div className="animate-in slide-in-from-top-4 duration-300">
-              <h3 className="font-semibold mb-4 text-primary">
+            <div className="animate-in slide-in-from-top-4 duration-300 overflow-x-hidden">
+              <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 text-primary truncate">
                 Ingredients in {selectedCategory} ({ingredients.length})
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 {ingredients.map((ingredient, index) => (
-                  <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+                  <Card key={index} className="p-3 sm:p-4 hover:shadow-md transition-shadow overflow-hidden">
                     <div className="flex flex-col gap-2">
-                      <p className="font-medium text-sm">{ingredient}</p>
+                      <p className="font-medium text-xs sm:text-sm truncate" title={ingredient}>{ingredient}</p>
                       <Button
                         size="sm"
                         onClick={() => handleAddIngredient(ingredient)}
-                        className="w-full"
+                        className="w-full text-xs sm:text-sm h-8"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
+                        <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         Add
                       </Button>
                     </div>
