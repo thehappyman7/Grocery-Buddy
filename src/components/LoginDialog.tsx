@@ -42,9 +42,13 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
       // Clean up existing auth state before login
       cleanupAuthState();
       
+      // Log for debugging
+      console.log("Starting Google login process...");
+      
       await loginWithGoogle();
       // Dialog will close automatically when user returns from Google OAuth flow
     } catch (error) {
+      console.error("Google login error:", error);
       setIsLoading(false);
     }
   };
@@ -55,7 +59,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
         <DialogHeader>
           <DialogTitle>Sign in</DialogTitle>
           <DialogDescription>
-            Sign in to continue using Aura Grocer
+            Sign in to continue using GroceryBuddy
           </DialogDescription>
         </DialogHeader>
         

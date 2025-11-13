@@ -14,15 +14,11 @@ serve(async (req) => {
   }
 
   try {
-  const { location, cuisines, isVegetarian, budget } = await req.json();
-  
-  const locationText = location?.city 
-    ? `${location.city}, ${location.country}` 
-    : location?.country || 'general region';
+    const { country, cuisines, isVegetarian, budget } = await req.json();
 
     const vegetarianNote = isVegetarian ? ' This person follows a VEGETARIAN diet, so exclude all non-vegetarian categories like meat, fish, poultry, and their derivatives.' : '';
     
-    const prompt = `Generate 6-8 grocery ingredient categories for someone living in ${locationText} who prefers ${cuisines.join(', ')} cuisine(s).${vegetarianNote}
+    const prompt = `Generate 6-8 grocery ingredient categories for someone living in ${country} who prefers ${cuisines.join(', ')} cuisine(s).${vegetarianNote}
 
 Return ONLY a JSON array of category objects with this exact format:
 [
@@ -33,17 +29,7 @@ Return ONLY a JSON array of category objects with this exact format:
   }
 ]
 
-IMPORTANT: The location (${locationText}) should influence:
-- Locally available produce and seasonal ingredients
-- Regional specialty items commonly found in local markets
-- Traditional ingredients specific to that area
-
-The cuisines (${cuisines.join(', ')}) should influence:
-- Spices and seasonings typical to these cooking styles
-- Staple ingredients used in these cuisines
-- Specialty items needed for authentic recipes
-
-Make categories practical and region-specific for ${locationText}.${isVegetarian ? ' Focus on vegetarian ingredients only - no meat, fish, or poultry categories.' : ''}
+Make categories relevant to ${country} and ${cuisines.join(', ')} cuisine preferences. Include both staples and specialty items for those cuisines.${isVegetarian ? ' Focus on vegetarian ingredients only - no meat, fish, or poultry categories.' : ''}
 
 Examples:
 - For Indian: Pulses & Lentils, Spices & Seasonings, Flours & Grains, etc.
@@ -52,7 +38,7 @@ Examples:
 
 Return ONLY the JSON array, no other text.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -65,39 +51,30 @@ Return ONLY the JSON array, no other text.`;
         }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 800
+          maxOutputTokens: 800,
+          responseMimeType: "application/json"
         }
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return new Response(JSON.stringify({ 
-        error: "Failed to generate categories. Please try again.",
-        categories: [] 
-      }), {
-        status: response.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const data = await response.json();
     
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return new Response(JSON.stringify({ categories: [] }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
+      throw new Error('Invalid response from Gemini API');
     }
     
     const categoriesText = data.candidates[0].content.parts[0].text;
-    const cleanedJson = categoriesText.replace(/```json\n?|\n?```/g, '').trim();
-    const categories = JSON.parse(cleanedJson);
+    
+    // Parse the JSON response
+    const categories = JSON.parse(categoriesText);
 
     return new Response(JSON.stringify({ categories }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ categories: [] }), {
+    console.error('Error in generate-categories function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

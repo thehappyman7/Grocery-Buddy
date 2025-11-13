@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import IngredientButton from '@/components/ui/ingredient-button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, ShoppingCart } from 'lucide-react';
 import { useGrocery } from '@/context/GroceryContext';
@@ -35,10 +34,6 @@ const AIIngredientsSelector: React.FC<AIIngredientsSelectorProps> = ({
       .filter(item => !selectedIngredients.includes(item.toLowerCase()))
       .map(item => item.toLowerCase());
     onIngredientsChange([...selectedIngredients, ...newIngredients]);
-  };
-
-  const isItemSelected = (itemName: string) => {
-    return selectedIngredients.includes(itemName.toLowerCase());
   };
 
   return (
@@ -86,18 +81,19 @@ const AIIngredientsSelector: React.FC<AIIngredientsSelectorProps> = ({
                   Add All
                 </Button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
                 {groceryIngredients.map((ingredient, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:border-primary/50 transition-colors">
-                    <span className="font-medium capitalize">{ingredient}</span>
-                    <IngredientButton
-                      variant="add"
-                      itemName={ingredient}
-                      onAction={() => addIngredient(ingredient)}
-                      disabled={isItemSelected(ingredient)}
-                      showConfirmation={false}
-                    />
-                  </div>
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="justify-start h-auto p-2 hover:bg-primary/10"
+                    onClick={() => addIngredient(ingredient)}
+                    disabled={selectedIngredients.includes(ingredient.toLowerCase())}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    <span className="capitalize text-sm">{ingredient}</span>
+                  </Button>
                 ))}
               </div>
             </>

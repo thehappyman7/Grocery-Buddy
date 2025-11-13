@@ -3,11 +3,9 @@ import { useGrocery } from '@/context/GroceryContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Settings, Leaf, DollarSign, Plus, MapPin } from 'lucide-react';
+import { Plus, Loader2, Settings, Leaf, DollarSign } from 'lucide-react';
+import { ingredientDatabase, findIngredientMatches } from '@/data/ingredientDatabase';
 import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import type { UserLocation } from '@/context/PreferencesContext';
 
 interface DynamicCategory {
   name: string;
@@ -16,7 +14,7 @@ interface DynamicCategory {
 }
 
 interface DynamicCategoryBrowserProps {
-  location: UserLocation;
+  country: string;
   cuisines: string[];
   isVegetarian: boolean;
   budget?: number;
@@ -24,7 +22,7 @@ interface DynamicCategoryBrowserProps {
 }
 
 const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({ 
-  location, 
+  country, 
   cuisines, 
   isVegetarian,
   budget,
@@ -32,24 +30,21 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 }) => {
   const [categories, setCategories] = useState<DynamicCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [categoryItems, setCategoryItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [totalSpent, setTotalSpent] = useState(0);
   const { addItem, groceryItems } = useGrocery();
-  const { toast } = useToast();
 
   useEffect(() => {
-    if (location) {
-      generateCategories();
-    }
-  }, [location, cuisines, isVegetarian]);
+    generateCategories();
+  }, [country, cuisines, isVegetarian]);
 
   useEffect(() => {
     if (budget) {
-      // Calculate total spent from current items using their consistent prices
+      // Calculate total spent from current items (mock prices for demo)
       const spent = groceryItems.reduce((total, item) => {
-        return total + (item.price || 0);
+        const mockPrice = Math.random() * 10 + 2; // $2-12 range
+        return total + mockPrice;
       }, 0);
       setTotalSpent(spent);
     }
@@ -57,42 +52,25 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
 
   useEffect(() => {
     if (selectedCategory) {
-      fetchCategoryIngredients(selectedCategory);
+      generateCategoryItems(selectedCategory);
     } else {
-      setIngredients([]);
+      setCategoryItems([]);
     }
   }, [selectedCategory]);
 
   const generateCategories = async () => {
     try {
       setLoading(true);
-      setCategories([]); // Clear existing categories
-      setSelectedCategory(''); // Clear selection
       
       const { data, error } = await supabase.functions.invoke('generate-categories', {
-        body: { location, cuisines, isVegetarian, budget }
+        body: { country, cuisines, isVegetarian, budget }
       });
 
       if (error) throw error;
 
-      if (data?.error) {
-        toast({
-          title: "Error loading categories",
-          description: data.error,
-          variant: "destructive",
-        });
-        setCategories([]);
-      } else if (data?.categories && Array.isArray(data.categories)) {
-        setCategories(data.categories);
-      } else {
-        throw new Error("Invalid response format");
-      }
+      setCategories(data.categories || []);
     } catch (error) {
-      toast({
-        title: "Error loading categories",
-        description: "Couldn't load categories. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error generating categories:', error);
       // Fallback categories if AI fails
       setCategories([
         { name: 'Staples & Grains', description: 'Essential grains and basic ingredients', color: 'grocery-orange' },
@@ -106,140 +84,113 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
     }
   };
 
-  const fetchCategoryIngredients = async (categoryName: string) => {
-    setLoadingIngredients(true);
+  const generateCategoryItems = async (categoryName: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('generate-recipes', {
-        body: {
-          type: 'ingredients',
-          category: categoryName,
-          filters: {
-            isVegetarian,
-            cuisine: cuisines[0] || 'all',
-            budget: budget || 0
-          }
-        }
+      // Get relevant ingredients from database based on category name and user preferences
+      const relevantIngredients = ingredientDatabase.filter(ingredient => {
+        const categoryLower = categoryName.toLowerCase();
+        const ingredientCategory = ingredient.category.toLowerCase();
+        const ingredientName = ingredient.name.toLowerCase();
+        
+        // Check if ingredient fits the category
+        const categoryMatch = 
+          categoryLower.includes(ingredientCategory) ||
+          ingredientCategory.includes(categoryLower.split(' ')[0]) ||
+          (categoryLower.includes('staple') && ['grains', 'pulses'].includes(ingredientCategory)) ||
+          (categoryLower.includes('vegetable') && ['vegetables', 'herbs'].includes(ingredientCategory)) ||
+          (categoryLower.includes('spice') && ['spices', 'herbs', 'seasonings'].includes(ingredientCategory)) ||
+          (categoryLower.includes('dairy') && ['dairy', 'protein'].includes(ingredientCategory)) ||
+          (categoryLower.includes('protein') && ['protein', 'dairy'].includes(ingredientCategory));
+
+        // Check if ingredient fits user's cuisine preferences
+        const cuisineMatch = cuisines.some(cuisine => {
+          if (cuisine === 'Indian' && ingredient.origin === 'Indian') return true;
+          if (cuisine !== 'Indian' && ingredient.origin !== 'Indian') return true;
+          if (ingredient.origin === 'Universal') return true;
+          return false;
+        });
+
+        // Filter out non-vegetarian items if vegetarian mode is enabled
+        const vegetarianMatch = !isVegetarian || !ingredient.category.toLowerCase().includes('meat') && 
+                                                !ingredient.category.toLowerCase().includes('fish') && 
+                                                !ingredient.category.toLowerCase().includes('poultry') &&
+                                                !ingredient.name.toLowerCase().includes('chicken') &&
+                                                !ingredient.name.toLowerCase().includes('beef') &&
+                                                !ingredient.name.toLowerCase().includes('pork') &&
+                                                !ingredient.name.toLowerCase().includes('fish') &&
+                                                !ingredient.name.toLowerCase().includes('mutton');
+
+        return categoryMatch && cuisineMatch && vegetarianMatch;
       });
 
-      if (error) throw error;
+      // Limit to 12-15 items per category and capitalize names
+      const items = relevantIngredients
+        .slice(0, 15)
+        .map(ingredient => 
+          ingredient.name.charAt(0).toUpperCase() + ingredient.name.slice(1)
+        );
 
-      if (data?.error) {
-        toast({
-          title: "Error",
-          description: data.error,
-          variant: "destructive",
-        });
-        setIngredients([]);
-      } else if (data?.ingredients && Array.isArray(data.ingredients)) {
-        setIngredients(data.ingredients);
-      } else {
-        toast({
-          title: "Error",
-          description: "Couldn't load ingredients for this category. Please try again.",
-          variant: "destructive",
-        });
-        setIngredients([]);
-      }
+      setCategoryItems(items);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Couldn't load ingredients for this category. Please try again.",
-        variant: "destructive",
-      });
-      setIngredients([]);
-    } finally {
-      setLoadingIngredients(false);
+      console.error('Error generating category items:', error);
+      setCategoryItems([]);
     }
   };
 
-  const handleAddIngredient = (ingredient: string) => {
-    addItem(ingredient, selectedCategory);
-    toast({
-      title: "Added to list",
-      description: `${ingredient} has been added to your grocery list.`,
-    });
+  const handleAddItem = (itemName: string) => {
+    addItem(itemName, selectedCategory);
   };
 
-  // Handle missing location data
-  if (!location) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
-        <MapPin className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Please set your location preferences to browse categories</p>
-        <Button onClick={onChangePreferences} variant="default">
-          <Settings className="h-4 w-4 mr-2" />
-          Set Preferences
-        </Button>
-      </div>
-    );
-  }
-
   if (loading) {
-    const locationText = location?.city 
-      ? `${location.city}, ${location.country || ''}` 
-      : location?.country || 'your location';
-    
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating categories for {locationText} and {cuisines.join(', ')} cuisine...</span>
+        <span className="ml-2 text-muted-foreground">Generating categories for {country} and {cuisines.join(', ')} cuisine...</span>
       </div>
     );
   }
 
-  const locationText = location?.city 
-    ? `${location.city}, ${location.country || ''}` 
-    : location?.country || 'Your Location';
-
   return (
     <div className="space-y-6">
-      <Card className="border-border bg-card shadow-lg overflow-x-hidden">
-        <CardHeader className="bg-primary rounded-t-lg p-3 sm:p-6">
-          <CardTitle className="text-base sm:text-lg text-primary-foreground flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-            <span className="truncate">Browse by Category</span>
+      <Card className="border-border bg-card shadow-lg">
+        <CardHeader className="bg-primary rounded-t-lg">
+          <CardTitle className="text-lg text-primary-foreground flex items-center justify-between">
+            <span>Browse by Category</span>
             <Button
               variant="secondary"
               size="sm"
               onClick={onChangePreferences}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs sm:text-sm w-full sm:w-auto"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20"
             >
-              <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <Settings className="h-4 w-4 mr-1" />
               Change Preferences
             </Button>
           </CardTitle>
-          <div className="text-xs sm:text-sm text-primary-foreground/80 space-y-2 mt-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-              <span className="font-medium">Location:</span>
-              <span className="truncate">{locationText}</span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium">Cuisines:</span>
-              <span className="truncate">{cuisines.join(', ')}</span>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 text-xs flex-wrap">
+          <div className="text-sm text-primary-foreground/80 space-y-1">
+            <p>Categories for {country} • {cuisines.join(', ')} cuisine</p>
+            <div className="flex items-center gap-4 text-xs">
               {isVegetarian && (
-                <span className="flex items-center gap-1 bg-green-600/20 px-2 py-1 rounded shrink-0">
+                <span className="flex items-center gap-1 bg-green-600/20 px-2 py-1 rounded">
                   <Leaf className="h-3 w-3" />
                   Vegetarian Only
                 </span>
               )}
               {budget && (
-                <span className="flex items-center gap-1 bg-blue-600/20 px-2 py-1 rounded shrink-0">
-                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="flex items-center gap-1 bg-blue-600/20 px-2 py-1 rounded">
+                  <DollarSign className="h-3 w-3" />
                   Budget: ${budget}/week
                 </span>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 p-3 sm:p-6">
+        <CardContent className="space-y-4 p-6">
           {/* Budget Progress */}
           {budget && (
-            <div className="p-3 sm:p-4 border rounded-lg bg-muted/30 overflow-x-hidden">
-              <div className="flex items-center justify-between mb-2 gap-2">
-                <span className="text-xs sm:text-sm font-medium text-primary truncate">Weekly Budget Progress</span>
-                <span className={`text-xs sm:text-sm font-semibold shrink-0 ${
+            <div className="p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-primary">Weekly Budget Progress</span>
+                <span className={`text-sm font-semibold ${
                   totalSpent > budget ? 'text-red-600' : 
                   totalSpent > budget * 0.8 ? 'text-yellow-600' : 'text-green-600'
                 }`}>
@@ -267,26 +218,11 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
               <SelectTrigger className="border-border hover:border-primary transition-colors">
                 <SelectValue placeholder="Choose a category..." />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-2 border-border shadow-2xl z-[100] rounded-lg max-h-[400px] overflow-y-auto">
-                {loading && (
-                  <div className="p-4 text-center text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
-                    <span className="text-sm">Fetching options...</span>
-                  </div>
-                )}
-                {!loading && categories.length === 0 && (
-                  <div className="p-4 text-center text-muted-foreground text-sm">
-                    No categories available. Try changing your preferences.
-                  </div>
-                )}
-                {!loading && categories.map((category) => (
-                  <SelectItem 
-                    key={category.name} 
-                    value={category.name} 
-                    className="hover:bg-accent focus:bg-accent cursor-pointer py-3"
-                  >
+              <SelectContent className="bg-popover border border-border shadow-xl z-50 rounded-lg">
+                {categories.map((category) => (
+                  <SelectItem key={category.name} value={category.name} className="hover:bg-accent">
                     <div>
-                      <div className="font-medium text-foreground">{category.name}</div>
+                      <div className="font-medium">{category.name}</div>
                       <div className="text-xs text-muted-foreground">{category.description}</div>
                     </div>
                   </SelectItem>
@@ -295,57 +231,42 @@ const DynamicCategoryBrowser: React.FC<DynamicCategoryBrowserProps> = ({
             </Select>
           </div>
 
-          {selectedCategory && loadingIngredients && (
-            <div className="animate-in slide-in-from-top-4 duration-300 overflow-x-hidden">
-              <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 text-primary truncate">
-                Ingredients in {selectedCategory}
+          {selectedCategory && categoryItems.length > 0 && (
+            <div className="animate-in slide-in-from-top-4 duration-300">
+              <h3 className="font-semibold mb-4 text-primary">
+                Items in {selectedCategory} ({categoryItems.length})
               </h3>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                {[...Array(10)].map((_, i) => (
-                  <Card key={i} className="p-3 sm:p-4">
-                    <Skeleton className="h-5 sm:h-6 w-full mb-2" />
-                    <Skeleton className="h-7 sm:h-8 w-full" />
-                  </Card>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                {categoryItems.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center justify-between p-4 border-2 border-border bg-muted/30 rounded-xl hover:border-primary/40 hover:shadow-md transition-all duration-200"
+                  >
+                    <span className="text-sm font-medium">{item}</span>
+                    <Button
+                      size="sm"
+                      onClick={() => handleAddItem(item)}
+                      className="ml-2 bg-primary hover:bg-primary/80 text-primary-foreground border-0 shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {selectedCategory && !loadingIngredients && ingredients.length > 0 && (
-            <div className="animate-in slide-in-from-top-4 duration-300 overflow-x-hidden">
-              <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 text-primary truncate">
-                Ingredients in {selectedCategory} ({ingredients.length})
-              </h3>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                {ingredients.map((ingredient, index) => (
-                  <Card key={index} className="p-3 sm:p-4 hover:shadow-md transition-shadow overflow-hidden">
-                    <div className="flex flex-col gap-2">
-                      <p className="font-medium text-xs sm:text-sm truncate" title={ingredient}>{ingredient}</p>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddIngredient(ingredient)}
-                        className="w-full text-xs sm:text-sm h-8"
-                      >
-                        <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        Add
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {selectedCategory && !loadingIngredients && ingredients.length === 0 && (
+          {selectedCategory && categoryItems.length === 0 && (
             <div className="text-center py-6 text-muted-foreground">
-              <p className="font-medium">Couldn't load ingredients for this category. Please try again.</p>
+              <p className="font-medium">No items found for this category</p>
               <p className="text-sm">Try selecting a different category</p>
             </div>
           )}
 
           {!selectedCategory && (
             <div className="text-center py-12 text-muted-foreground">
-              <p className="font-medium">Select a category above to browse ingredients</p>
+              <p className="font-medium">Select a category above to browse available items</p>
             </div>
           )}
         </CardContent>

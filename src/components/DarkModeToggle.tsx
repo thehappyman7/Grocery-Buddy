@@ -31,7 +31,7 @@ const DarkModeToggle = () => {
 
   return (
     <div className="flex items-center space-x-2">
-      <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
+      <span className="text-xs text-muted-foreground font-medium">
         {isDark ? 'Dark Mode' : 'Light Mode'}
       </span>
       <Switch

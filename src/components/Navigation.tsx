@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import LoginDialog from './LoginDialog';
 import DarkModeToggle from './DarkModeToggle';
-import SyncIndicator from './SyncIndicator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,49 +22,44 @@ const Navigation: React.FC = () => {
   return (
     <>
       <nav className="bg-gradient-to-r from-white to-grocery-purple-light shadow-lg border-b border-grocery-purple/10">
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-grocery-purple/10 rounded-full">
-                <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-grocery-purple" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-grocery-purple/10 rounded-full">
+                <ShoppingCart className="h-8 w-8 text-grocery-purple" />
               </div>
-              <span className="text-xl sm:text-2xl font-bold font-primary text-gray-800 tracking-tight">Aura Grocer</span>
+              <span className="text-2xl font-bold font-primary text-gray-800 tracking-tight">GroceryBuddy</span>
             </div>
             
-            <div className="flex items-center gap-2 sm:gap-4">
-              <SyncIndicator />
+            <div className="flex items-center gap-4">
               <DarkModeToggle />
               {!isAuthenticated ? (
                 <Button 
                   variant="default" 
                   size="sm" 
-                  className="bg-gradient-to-r from-grocery-purple to-grocery-blue text-white border-0 hover:from-grocery-purple/90 hover:to-grocery-blue/90 shadow-md hover:shadow-lg transition-all duration-200 rounded-full px-3 sm:px-6 font-medium text-xs sm:text-sm"
+                  className="bg-gradient-to-r from-grocery-purple to-grocery-blue text-white border-0 hover:from-grocery-purple/90 hover:to-grocery-blue/90 shadow-md hover:shadow-lg transition-all duration-200 rounded-full px-6 font-medium"
                   onClick={() => setLoginDialogOpen(true)}
                 >
-                  <span className="hidden sm:inline">Sign In</span>
-                  <span className="sm:hidden">Sign In</span>
+                  Sign In
                 </Button>
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:bg-grocery-purple/10">
-                      <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-grocery-purple/10">
+                      <Avatar className="h-9 w-9">
                         <AvatarImage src={user?.avatar} alt={user?.name} />
-                        <AvatarFallback className="bg-gradient-to-r from-grocery-purple to-grocery-blue text-white font-medium text-xs sm:text-sm">
+                        <AvatarFallback className="bg-gradient-to-r from-grocery-purple to-grocery-blue text-white font-medium">
                           {user?.name?.substring(0, 2).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 border-grocery-purple/20 shadow-lg bg-background z-50" align="end" forceMount>
-                     <DropdownMenuLabel>
+                  <DropdownMenuContent className="w-56 border-grocery-purple/20 shadow-lg" align="end" forceMount>
+                    <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user?.name}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user?.email}
-                        </p>
-                        <p className="text-xs text-green-600 leading-none">
-                          ✓ Data synced to Google account
                         </p>
                       </div>
                     </DropdownMenuLabel>
